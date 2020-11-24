@@ -2,7 +2,6 @@ module Main where
 
 import HTTP
 import Parse
-import RenameUtils ( gbpCurrencyFieldRename, usdCurrencyFieldRename, eurCurrencyFieldRename )
 
 main :: IO ()
 main = do
@@ -11,4 +10,4 @@ main = do
     case (parse json) of
         Left err -> print err
         Right bits -> print (bpi bits)
-   
+
