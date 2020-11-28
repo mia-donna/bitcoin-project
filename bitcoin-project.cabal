@@ -29,7 +29,6 @@ library
   exposed-modules:
       HTTP
       Parse
-      RenameUtils
   other-modules:
       Paths_bitcoin_project
   hs-source-dirs:

@@ -7,17 +7,53 @@ module Database
 
 import Database.HDBC
 import Database.HDBC.Sqlite3
-import Parse 
+import Parse
+
+
+-- add HDBC dependencies to stack.yaml + package.yaml
+-- creates access to a db while takes filename as a parameter
 
 initialiseDB :: IO Connection
-initialiseDB db = do 
-        conn <- connectSqlite3 "bitcoin.sqlite" 
-        run conn "CREATE TABLE IF NOT EXISTS bpi (\
-            \ID INTEGER PRIMARY KEY AUTOINCREMENT, \
-             \usd_id INTEGER NOT NULL, \
-             \gbp_id INTEGER NOT NULL, \
-             \eur_id INTEGER NOT NULL )" 
+initialiseDB =
+ do
+    conn <- connectSqlite3 "bitcoin.sqlite"
+    run conn "CREATE TABLE IF NOT EXISTS bpi (\
+          \id INTEGER PRIMARY KEY AUTOINCREMENT, \
+          \usd_id INTEGER NOT NULL, \
+          \gbp_id INTEGER NOT NULL, \
+          \eur_id INTEGER NOT NULL )"
+    run conn "CREATE TABLE IF NOT EXISTS usd (\
+          \usd_id INTEGER PRIMARY KEY, \
+          \code VARCHAR(40) NOT NULL, \
+          \symbol VARCHAR(40) NOT NULL, \
+          \rate VARCHAR(40) NOT NULL,  \
+          \description VARCHAR(40) NOT NULL
+          \FOREIGN KEY (usd_id) REFERENCES bpi (usd_id))"
+    run conn "CREATE TABLE IF NOT EXISTS gbp (\
+          \gbp_id INTEGER PRIMARY KEY, \
+          \code VARCHAR(40) NOT NULL, \
+          \symbol VARCHAR(40) NOT NULL, \
+          \rate VARCHAR(40) NOT NULL,  \
+          \description VARCHAR(40) NOT NULL \
+          \FOREIGN KEY (gbp_id) REFERENCES bpi (gbp_id))"
+    run conn "CREATE TABLE IF NOT EXISTS eur (\
+          \eur_id INTEGER PRIMARY KEY, \
+          \code VARCHAR(40) NOT NULL, \
+          \symbol VARCHAR(40) NOT NULL, \
+          \rate VARCHAR(40) NOT NULL,  \
+          \description VARCHAR(40) NOT NULL \
+          \FOREIGN KEY (eur_id) REFERENCES bpi (eur_id))"
+    run conn "CREATE TABLE IF NOT EXISTS time (\
+          \id INTEGER PRIMARY KEY AUTOINCREMENT, \
+          \updated VARCHAR(40) NOT NULL, \
+          \updated_ISO VARCHAR(40) NOT NULL, \
+          \updateduk VARCHAR(40) NOT NULL \ 
+          \) " []                           
+    commit conn
+    return conn
 
+
+-- to sql values
 
 bpiToSqlValues :: Bpi -> [SqlValue] 
 bpiToSqlValues bpi = [
@@ -28,45 +64,24 @@ bpiToSqlValues bpi = [
 
 currencyToSqlValues :: Currency -> [SqlValue] 
 currencyToSqlValues currency = [
-       toSql $ usd_id currency,
-       toSql $ gbp_id currency,
-       toSql $ eur_id currency
+       toSql $ code currency,
+       toSql $ symbol currency,
+       toSql $ rate currency,
+       toSql $ description currency,
+       toSql $ rate_float currency
     ]
 
-prepareInsertRecordStmt :: Connection -> IO Statement
-prepareInsertRecordStmt conn = prepare conn "INSERT INTO records VALUES (?,?,?,?,?,?,?,?)"
+currencyToSqlValues :: Time -> [SqlValue] 
+timeToSqlValues time = [
+       toSql $ updated time,
+       toSql $ updated_ISO time,
+       toSql $ updateduk time
+    ]
 
-saveRecords :: [Record] -> Connection -> IO ()
-saveRecords records conn = do
-     stmt <- prepareInsertRecordStmt conn 
-     executeMany stmt (map recordToSqlValues records) 
-     commit conn
-
--- CREATE USD TABLE
-{-        run conn "CREATE TABLE IF NOT EXISTS usd (\
-             \code VARCHAR(40) NOT NULL, \
-             \symbol VARCHAR(40) NOT NULL, \
-             \rate VARCHAR(40) NOT NULL,  \
-             \description VARCHAR(40) NOT NULL )" -}   
-
--- CREATE GBP TABLE
-{-        run conn "CREATE TABLE IF NOT EXISTS gbp (\
-             \code VARCHAR(40) NOT NULL, \
-             \symbol VARCHAR(40) NOT NULL, \
-             \rate VARCHAR(40) NOT NULL,  \
-             \description VARCHAR(40) NOT NULL )" -}      
-
- -- CREATE EUR TABLE
-{-        run conn "CREATE TABLE IF NOT EXISTS eur (\
-             \code VARCHAR(40) NOT NULL, \
-             \symbol VARCHAR(40) NOT NULL, \
-             \rate VARCHAR(40) NOT NULL,  \
-             \description VARCHAR(40) NOT NULL )" -} 
-
--- CREATE TIME TABLE
-{-        run conn "CREATE TABLE IF NOT EXISTS time (\
-             \updated VARCHAR(40) NOT NULL, \
-             \updated_ISO VARCHAR(40) NOT NULL, \
-             \updateduk VARCHAR(40) NOT NULL )" -}
-
--- insert cabal deps from finance
+bitcoinToSqlValues :: Bitcoin -> [SqlValue] 
+timeToSqlValues time = [
+       toSql $ time bitcoin,
+       toSql $ disclaimer bitcoin,
+       toSql $ chartName bitcoin,
+       toSql $ bpi bitcoin
+    ]
