@@ -2,7 +2,8 @@
 
 module Database 
     (initialiseDB,
-    saveTimeRecords
+    saveTimeRecords,
+    saveCurrencyRecords
     ) where
 
 import Database.HDBC
@@ -20,7 +21,7 @@ initialiseDB =
           \updateduk VARCHAR(40) NOT NULL \ 
           \) " []                           
     commit conn
-    run conn "CREATE TABLE IF NOT EXISTS currency (\
+    run conn "CREATE TABLE IF NOT EXISTS currencys (\
           \code VARCHAR(40) NOT NULL PRIMARY KEY, \
           \symbol VARCHAR(40) NOT NULL, \
           \rate VARCHAR(40) NOT NULL,  \
@@ -30,7 +31,7 @@ initialiseDB =
     run conn "CREATE TABLE IF NOT EXISTS country (\
           \id INTEGER PRIMARY KEY AUTOINCREMENT, \
           \code VARCHAR(40) NOT NULL, \
-          \FOREIGN KEY (code) REFERENCES currency (code)) " []  
+          \FOREIGN KEY (code) REFERENCES currencys (code)) " []  
     commit conn
     return conn      
  
@@ -65,5 +66,13 @@ saveTimeRecords time conn = do
      commit conn    
 
 -- Next create a function to prepare Currency 
+prepareInsertCurrencyStmt :: Connection -> IO Statement
+prepareInsertCurrencyStmt conn = prepare conn "INSERT INTO currencys VALUES (?,?,?,?)"
 
--- Then create a function to map Currency
+-- Saves currency records to db 
+saveCurrencyRecords :: [Currency] -> Connection -> IO ()
+saveCurrencyRecords currencys conn = do
+     stmt <- prepareInsertCurrencyStmt conn 
+     executeMany stmt (map currencyToSqlValues currencys) 
+     commit conn
+     
