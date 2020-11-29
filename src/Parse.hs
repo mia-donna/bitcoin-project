@@ -20,7 +20,7 @@ data Currency = Currency {
      symbol :: String,
      rate :: String,
      description :: String,
-     rate_float :: Float
+     rate_float :: Double
  } deriving (Show, Generic)
 
  -- The Currencys data structure

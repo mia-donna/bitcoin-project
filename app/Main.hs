@@ -2,6 +2,7 @@ module Main where
 
 import HTTP
 import Parse
+import Database
 
 main :: IO ()
 main = do
@@ -9,5 +10,14 @@ main = do
     json <- download url
     case (parse json) of
         Left err -> print err
-        Right bits -> print (bpi bits)
+        Right bits -> do
+            print ("time: ")
+            print (time bits)
+            print "Saving on DB.."
+            conn <- initialiseDB
+            print("Initialized")
+            -- Saves time records to db
+            saveTimeRecords (time bits) conn
+    print "Time records saved to db!"
+            
 
