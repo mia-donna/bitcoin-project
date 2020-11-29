@@ -29,7 +29,7 @@ library
   exposed-modules:
       HTTP
       Parse
-      RenameUtils
+      Database
   other-modules:
       Paths_bitcoin_project
   hs-source-dirs:
@@ -40,6 +40,8 @@ library
     , bytestring
     , http-conduit
     , text
+    , HDBC-sqlite3
+    , HDBC
   default-language: Haskell2010
 
 executable bitcoin-project-exe

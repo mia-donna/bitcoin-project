@@ -2,71 +2,77 @@
 
 module Database 
     (initialiseDB,
-    saveRecords
+    saveTimeRecords,
+    saveCurrencyRecords
     ) where
 
 import Database.HDBC
 import Database.HDBC.Sqlite3
-import Parse 
+import Parse
 
+-- Creates multiple tables with our db connection handler conn
 initialiseDB :: IO Connection
-initialiseDB db = do 
-        conn <- connectSqlite3 "bitcoin.sqlite" 
-        run conn "CREATE TABLE IF NOT EXISTS bpi (\
-            \ID INTEGER PRIMARY KEY AUTOINCREMENT, \
-             \usd_id INTEGER NOT NULL, \
-             \gbp_id INTEGER NOT NULL, \
-             \eur_id INTEGER NOT NULL )" 
+initialiseDB =
+ do
+    conn <- connectSqlite3 "bitcoin4.sqlite"
+    run conn "CREATE TABLE IF NOT EXISTS time (\
+          \updated VARCHAR(40) NOT NULL PRIMARY KEY, \
+          \updated_ISO VARCHAR(40) NOT NULL, \
+          \updateduk VARCHAR(40) NOT NULL \ 
+          \) " []                           
+    commit conn
+    run conn "CREATE TABLE IF NOT EXISTS currencys (\
+          \code VARCHAR(40) NOT NULL PRIMARY KEY, \
+          \symbol VARCHAR(40) NOT NULL, \
+          \rate VARCHAR(40) NOT NULL,  \
+          \description VARCHAR(40) NOT NULL \ 
+          \) " []      
+    commit conn
+    run conn "CREATE TABLE IF NOT EXISTS country (\
+          \id INTEGER PRIMARY KEY AUTOINCREMENT, \
+          \code VARCHAR(40) NOT NULL, \
+          \FOREIGN KEY (code) REFERENCES currencys (code)) " []  
+    commit conn
+    return conn      
+ 
+-- CONVERT OUR HASKELL DATATYPES TOSQL
 
-
-bpiToSqlValues :: Bpi -> [SqlValue] 
-bpiToSqlValues bpi = [
-       toSql $ usd bpi,
-       toSql $ gbp bpi,
-       toSql $ eur bpi
-    ]  
-
-currencyToSqlValues :: Currency -> [SqlValue] 
-currencyToSqlValues currency = [
-       toSql $ usd_id currency,
-       toSql $ gbp_id currency,
-       toSql $ eur_id currency
+-- TIME: This will work because all values are Strings
+timeToSqlValues :: Time -> [SqlValue] 
+timeToSqlValues time = [
+       toSql $ updated time,
+       toSql $ updatedISO time,
+       toSql $ updateduk time
     ]
 
-prepareInsertRecordStmt :: Connection -> IO Statement
-prepareInsertRecordStmt conn = prepare conn "INSERT INTO records VALUES (?,?,?,?,?,?,?,?)"
+-- CURRENCY: This will work as all values are Strings and Double
+currencyToSqlValues :: Currency -> [SqlValue] 
+currencyToSqlValues currency = [
+       toSql $ code currency,
+       toSql $ symbol currency,
+       toSql $ rate currency,
+       toSql $ description currency
+    ]    
 
-saveRecords :: [Record] -> Connection -> IO ()
-saveRecords records conn = do
-     stmt <- prepareInsertRecordStmt conn 
-     executeMany stmt (map recordToSqlValues records) 
+-- Prepare to insert 3 records into time table -- still need to add PK id and autoincrement records into this field
+prepareInsertTimeStmt :: Connection -> IO Statement
+prepareInsertTimeStmt conn = prepare conn "INSERT INTO time VALUES (?,?,?)"
+
+-- Saves time records to db 
+saveTimeRecords :: Time -> Connection -> IO ()
+saveTimeRecords time conn = do
+     stmt <- prepareInsertTimeStmt conn 
+     execute stmt (timeToSqlValues time) 
+     commit conn    
+
+-- Next create a function to prepare Currency 
+prepareInsertCurrencyStmt :: Connection -> IO Statement
+prepareInsertCurrencyStmt conn = prepare conn "INSERT INTO currencys VALUES (?,?,?,?)"
+
+-- Saves currency records to db 
+saveCurrencyRecords :: [Currency] -> Connection -> IO ()
+saveCurrencyRecords currencys conn = do
+     stmt <- prepareInsertCurrencyStmt conn 
+     executeMany stmt (map currencyToSqlValues currencys) 
      commit conn
-
--- CREATE USD TABLE
-{-        run conn "CREATE TABLE IF NOT EXISTS usd (\
-             \code VARCHAR(40) NOT NULL, \
-             \symbol VARCHAR(40) NOT NULL, \
-             \rate VARCHAR(40) NOT NULL,  \
-             \description VARCHAR(40) NOT NULL )" -}   
-
--- CREATE GBP TABLE
-{-        run conn "CREATE TABLE IF NOT EXISTS gbp (\
-             \code VARCHAR(40) NOT NULL, \
-             \symbol VARCHAR(40) NOT NULL, \
-             \rate VARCHAR(40) NOT NULL,  \
-             \description VARCHAR(40) NOT NULL )" -}      
-
- -- CREATE EUR TABLE
-{-        run conn "CREATE TABLE IF NOT EXISTS eur (\
-             \code VARCHAR(40) NOT NULL, \
-             \symbol VARCHAR(40) NOT NULL, \
-             \rate VARCHAR(40) NOT NULL,  \
-             \description VARCHAR(40) NOT NULL )" -} 
-
--- CREATE TIME TABLE
-{-        run conn "CREATE TABLE IF NOT EXISTS time (\
-             \updated VARCHAR(40) NOT NULL, \
-             \updated_ISO VARCHAR(40) NOT NULL, \
-             \updateduk VARCHAR(40) NOT NULL )" -}
-
--- insert cabal deps from finance
+     

@@ -13,17 +13,17 @@ import qualified Data.Char
 import Data.Text ( Text )
 import Data.Aeson.TH(deriveJSON, defaultOptions, Options(fieldLabelModifier))
 
--- Lower level currencys 
+-- CURRENCY
 
 data Currency = Currency {
      code :: String,
      symbol :: String,
      rate :: String,
      description :: String,
-     rate_float :: Float
+     rate_float :: Double
  } deriving (Show, Generic)
 
- -- The Currencys data structure
+ -- BPI
 
 data Bpi = Bpi {
    usd :: Currency,
@@ -42,14 +42,14 @@ $(deriveJSON defaultOptions {
             then "EUR" 
         else x} ''Bpi)
 
--- The first data structure with parents
+-- TIME The first data structure with parents
 data Time = Time {
     updated :: String,
     updatedISO :: String, 
     updateduk :: String
 }  deriving (Show, Generic)
 
--- The high-level data structure
+-- BITCOIN
 data Bitcoin = Bitcoin {
    time :: Time,
    disclaimer :: String,
@@ -67,5 +67,16 @@ instance ToJSON Time
 instance FromJSON Currency
 instance ToJSON Currency
 
+-- Datatype for the list of Currencys (like list of Records) -- as I couldn't get currencys to map to db, maybe we need to create a new datatype for currency
+data Currencys = Currencys {
+            currencys :: [Currency]
+      }  deriving (Show, Generic)
+
+instance FromJSON Currencys
+instance ToJSON Currencys 
+
 parse :: L8.ByteString -> Either String Bitcoin
 parse json = eitherDecode json :: Either String Bitcoin
+
+parseCurrencys :: L8.ByteString -> Either String Currencys
+parseCurrencys json = eitherDecode json :: Either String Currencys     
