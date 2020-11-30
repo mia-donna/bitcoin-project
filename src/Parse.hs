@@ -42,7 +42,7 @@ $(deriveJSON defaultOptions {
             then "EUR" 
         else x} ''Bpi)
 
--- TIME The first data structure with parents
+-- TIME
 data Time = Time {
     updated :: String,
     updatedISO :: String, 
@@ -68,15 +68,18 @@ instance FromJSON Currency
 instance ToJSON Currency
 
 -- Datatype for the list of Currencys (like list of Records) -- as I couldn't get currencys to map to db, maybe we need to create a new datatype for currency
-data Currencys = Currencys {
-            currencys :: [Currency]
-      }  deriving (Show, Generic)
+--data Currencys = Currencys {
+--            currencys :: [Currency]
+--      }  deriving (Show, Generic)
 
-instance FromJSON Currencys
-instance ToJSON Currencys 
+--instance FromJSON Currencys
+--instance ToJSON Currencys 
 
 parse :: L8.ByteString -> Either String Bitcoin
 parse json = eitherDecode json :: Either String Bitcoin
 
-parseCurrencys :: L8.ByteString -> Either String Currencys
-parseCurrencys json = eitherDecode json :: Either String Currencys     
+--parseCurrencys :: L8.ByteString -> Either String Currencys
+--parseCurrencys json = eitherDecode json :: Either String Currencys
+  
+--encodeFile :: ToJSON a => FilePath -> a -> IO ()
+--encodeFile = encodeFile json :: 
