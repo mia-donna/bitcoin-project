@@ -42,9 +42,10 @@ main = do
             print "GBP records saved to db!"
             saveEurRecords (eurCurrency) conn
             print "EUR records saved to db!"
+            print "All Data successfully saved to the Database."
             -- write https://api.coindesk.com/v1/bpi/currentprice.json to a file
-            createJs
-    print "Done!"        
+            createJsonFile
+    putStrLn "All done. Disconnecting"        
 
 -- save bpi bits to a filename
  {-}   createFile :: IO ()
@@ -62,16 +63,23 @@ load =
       Just n ->
          start n
 -}
-createJs = do
-    putStrLn $ "Time to create a json file!! "
+createJsonFile = do
+    putStrLn $ "Now it's time to create a json file!! "
     let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
     json <- download url
-    print "Parsing json again... "
     case (parse json) of
         Left err -> print err
         Right bits -> do
-            print "Writing BITCOIN DATA: https://api.coindesk.com/v1/bpi/currentprice.json to file" 
-            let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
-            json <- download url
-            let jsonString = (parse json) 
-            encodeFile "bitcoin.json" jsonString
+            print "Want to generate a json representation of our haskell data? Enter 'yes' if yes, or type anything else to quit "
+            x <- getLine
+            if x == "yes" then
+                do    
+                    print "Writing bitcoin data to file....." 
+                    let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
+                    json <- download url
+                    let jsonString = (parse json) 
+                    encodeFile "bitcoin.json" jsonString
+            else 
+                putStrLn "Thank you for using our Bitcoin app" 
+
+
