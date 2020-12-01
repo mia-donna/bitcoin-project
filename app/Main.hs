@@ -6,6 +6,7 @@ import HTTP
 import Parse
 import Database
 import Data.Aeson ( encodeFile )
+import qualified Data.Text.IO as TIO
 
 main :: IO ()
 main = do
@@ -46,6 +47,7 @@ main = do
             -- write https://api.coindesk.com/v1/bpi/currentprice.json to a file
             createJsonFile
             askQuestions
+            askTime
     putStrLn "All done. Disconnecting"        
 
 
@@ -122,20 +124,20 @@ askQuestions = do
 -- IF TIME:
 -- Work out how to grab the specific keys for currency e.g. "rate"
 
-askTime = do
-   putStrLn $ ""
+askTime = do 
+   putStrLn $ "Would you like to know when the bitcoin rate was last updated? Type 'yes' to proceed"
    putStrLn $ "(type anything else to quit)"
-   currencyAnswer <- getLine
-   if currencyAnswer == "EUR" then
+   timeAnswer <- getLine
+   if timeAnswer == "yes" then
       do
-         print "Retrieving latest EURO Bitcoin data ....."
+         print "Retrieving latest TIME Bitcoin data ....."
          let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
          json <- download url
          case (parse json) of
             Left err -> print err
             Right bits -> do
-               let bpiData = bpi bits
-               let eurCurrency = eur bpiData
-               putStrLn $ "Latest EURO data: " ++ show(eurCurrency)
+               case getTime json of 
+                    Nothing -> putStrLn $ "Could not find the Bitcoin time :("
+                    Just time -> putStrLn $ "Time last updated was: " ++ show(getTime json)
     else
       putStrLn $ "Thank you for using the Bitcoin app"

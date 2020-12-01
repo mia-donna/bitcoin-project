@@ -26,6 +26,11 @@ dependencies:
 - aeson
 - HDBC
 - HDBC-sqlite3
+- lens
+- lens-aeson
+- text
+
+
 
 library:
   source-dirs: src

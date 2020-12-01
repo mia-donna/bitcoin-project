@@ -12,6 +12,8 @@ import Data.Aeson.Types
 import qualified Data.Char
 import Data.Text ( Text )
 import Data.Aeson.TH(deriveJSON, defaultOptions, Options(fieldLabelModifier))
+import Control.Lens ( preview )
+import Data.Aeson.Lens ( key, _String )
 
 -- CURRENCY
 
@@ -83,3 +85,6 @@ parse json = eitherDecode json :: Either String Bitcoin
   
 --encodeFile :: ToJSON a => FilePath -> a -> IO ()
 --encodeFile = encodeFile json :: 
+
+getTime :: L8.ByteString -> Maybe Text
+getTime = preview (key "time" . key "updated" . _String)
