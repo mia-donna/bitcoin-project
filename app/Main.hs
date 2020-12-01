@@ -45,7 +45,7 @@ main = do
             print "All Data successfully saved to the Database."
             -- write https://api.coindesk.com/v1/bpi/currentprice.json to a file
             createJsonFile
-            askQuestionsExt
+            askQuestions
     putStrLn "All done. Disconnecting"        
 
 
@@ -69,7 +69,10 @@ createJsonFile = do
             else 
                 putStrLn "Thank you for using our Bitcoin app" 
 
--- Asks questions on GBP
+-- To do:
+-- Keys in the DB
+-- Clean up data types in main functions - separate into functions
+
 askQuestions = do
    putStrLn $ "Now for queries. Which Bitcoin currency you would like to query? Enter USD, GBP or EUR"
    putStrLn $ "(type anything else to quit)"
@@ -86,29 +89,7 @@ askQuestions = do
                let eurCurrency = eur bpiData
                putStrLn $ "Latest EURO data: " ++ show(eurCurrency)
     else
-      putStrLn "Thank you for using the app"
-
--- To do:
--- Keys in the DB
--- Clean up data types in main functions - separate into functions
-
-askQuestionsExt = do
-   putStrLn $ "Now for queries. Which Bitcoin currency you would like to query? Enter USD, GBP or EUR"
-   putStrLn $ "(type anything else to quit)"
-   currencyAnswer <- getLine
-   if currencyAnswer == "EUR" then
-      do
-         print "Retrieving latest EURO Bitcoin data ....."
-         let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
-         json <- download url
-         case (parse json) of
-            Left err -> print err
-            Right bits -> do
-               let bpiData = bpi bits
-               let eurCurrency = eur bpiData
-               putStrLn $ "Latest EURO data: " ++ show(eurCurrency)
-    else
-      putStrLn "Thank you for using the app"
+      putStrLn $ "Thank you for using the Bitcoin app"
    if currencyAnswer == "GBP" then
             do
          print "Retrieving latest GBP STERLING Bitcoin data ....."
@@ -121,4 +102,17 @@ askQuestionsExt = do
                let gbpCurrency = gbp bpiData
                putStrLn $ "Latest GBP data: " ++ show(gbpCurrency)
     else
-      putStrLn "Thank you for using the app"
+      putStrLn $ "Thank you for using the Bitcoin app"
+   if currencyAnswer == "USD" then
+            do
+         print "Retrieving latest USD Bitcoin data ....."
+         let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
+         json <- download url
+         case (parse json) of
+            Left err -> print err
+            Right bits -> do
+               let bpiData = bpi bits
+               let usdCurrency = usd bpiData
+               putStrLn $ "Latest USD data: " ++ show(usdCurrency)
+    else
+      putStrLn $ "Thank you for using the Bitcoin app"
