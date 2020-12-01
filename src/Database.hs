@@ -24,13 +24,14 @@ import Parse
 initialiseDB :: IO Connection
 initialiseDB =
  do
-    conn <- connectSqlite3 "bitcoin-test6.sqlite" 
+    conn <- connectSqlite3 "bitcoin-test8.sqlite" 
     run conn "CREATE TABLE IF NOT EXISTS usd (\
+          \id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \
           \code VARCHAR(40) NOT NULL, \
           \symbol VARCHAR(40) NOT NULL, \
           \rate VARCHAR(40) NOT NULL,  \
           \description VARCHAR(40) NOT NULL, \
-          \rate_float DOUBLE PRIMARY KEY \
+          \rate_float DOUBLE  \
           \) " []       
         --   \usd_id INTEGER PRIMARY KEY, \
     commit conn
@@ -39,7 +40,7 @@ initialiseDB =
           \symbol VARCHAR(40) NOT NULL, \
           \rate VARCHAR(40) NOT NULL,  \
           \description VARCHAR(40) NOT NULL, \
-          \rate_float DOUBLE PRIMARY KEY \
+          \rate_float DOUBLE \
           \) " [] 
         --   \gbp_id INTEGER PRIMARY KEY, \
     commit conn
@@ -48,12 +49,12 @@ initialiseDB =
           \symbol VARCHAR(40) NOT NULL, \
           \rate VARCHAR(40) NOT NULL,  \
           \description VARCHAR(40) NOT NULL, \
-          \rate_float DOUBLE PRIMARY KEY \
+          \rate_float DOUBLE \
           \) " [] 
         --   \eur_id INTEGER PRIMARY KEY, \
     commit conn
     run conn "CREATE TABLE IF NOT EXISTS time (\
-          \updated VARCHAR(40) PRIMARY KEY, \
+          \updated VARCHAR(40), \
           \updated_ISO VARCHAR(40) NOT NULL, \
           \updateduk VARCHAR(40) NOT NULL \
           \) " []                            
@@ -115,7 +116,7 @@ saveGbpRecords currency conn = do
 -- USD
 -- Next create a function to prepare Currency 
 prepareInsertUsdStmt :: Connection -> IO Statement
-prepareInsertUsdStmt conn = prepare conn "INSERT INTO usd VALUES (?,?,?,?,?)"
+prepareInsertUsdStmt conn = prepare conn "INSERT INTO usd (code, symbol, rate, description, rate_float) VALUES (?,?,?,?,?)"
 
 -- Saves currency records to db 
 saveUsdRecords :: Currency -> Connection -> IO ()
