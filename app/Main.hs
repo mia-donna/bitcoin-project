@@ -69,10 +69,6 @@ createJsonFile = do
             else 
                 putStrLn "Thank you for using our Bitcoin app" 
 
--- To do:
--- Keys in the DB
--- Clean up data types in main functions - separate into functions
-
 askQuestions = do
    putStrLn $ "Now for queries. Which Bitcoin currency you would like to query? Enter USD, GBP or EUR"
    putStrLn $ "(type anything else to quit)"
@@ -116,3 +112,8 @@ askQuestions = do
                putStrLn $ "Latest USD data: " ++ show(usdCurrency)
     else
       putStrLn $ "Thank you for using the Bitcoin app"
+
+-- STILL TO DO:
+-- Keys in the DB not working
+-- Clean up data types in main functions - separate into functions and get rid of repeated data
+-- Clean up data types in db functions     
