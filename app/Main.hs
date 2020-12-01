@@ -57,7 +57,7 @@ createJsonFile = do
     case (parse json) of
         Left err -> print err
         Right bits -> do
-            print "Want to generate a json representation of our haskell data? Enter 'yes' if yes, or type anything else to quit "
+            print "Want to generate a json representation of our haskell data? Enter 'yes' if yes, or type anything else to move to queries."
             x <- getLine
             if x == "yes" then
                 do    
@@ -67,7 +67,7 @@ createJsonFile = do
                     let jsonString = (parse json) 
                     encodeFile "bitcoin.json" jsonString
             else 
-                putStrLn "Thank you for using our Bitcoin app" 
+                putStrLn "Alright, no file output created this time." 
 
 askQuestions = do
    putStrLn $ "Now for queries. Which Bitcoin currency you would like to query? Enter USD, GBP or EUR"
@@ -113,7 +113,27 @@ askQuestions = do
     else
       putStrLn $ "Thank you for using the Bitcoin app"
 
+
 -- STILL TO DO:
 -- Keys in the DB not working
 -- Clean up data types in main functions - separate into functions and get rid of repeated data
--- Clean up data types in db functions     
+-- Clean up data types in db functions    
+-- Work out how to print just one data point from time e.g. "updated" 
+
+askTime = do
+   putStrLn $ ""
+   putStrLn $ "(type anything else to quit)"
+   currencyAnswer <- getLine
+   if currencyAnswer == "EUR" then
+      do
+         print "Retrieving latest EURO Bitcoin data ....."
+         let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
+         json <- download url
+         case (parse json) of
+            Left err -> print err
+            Right bits -> do
+               let bpiData = bpi bits
+               let eurCurrency = eur bpiData
+               putStrLn $ "Latest EURO data: " ++ show(eurCurrency)
+    else
+      putStrLn $ "Thank you for using the Bitcoin app"
