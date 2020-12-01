@@ -119,6 +119,8 @@ askQuestions = do
 -- Clean up data types in main functions - separate into functions and get rid of repeated data
 -- Clean up data types in db functions    
 -- Work out how to print just one data point from time e.g. "updated" 
+-- IF TIME:
+-- Work out how to grab the specific keys for currency e.g. "rate"
 
 askTime = do
    putStrLn $ ""
