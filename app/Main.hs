@@ -45,7 +45,7 @@ main = do
             print "EUR records saved to db!"
             print "All Data successfully saved to the Database."
 
-           {-} -- This can later go inside the askQuestions function
+           -- This can later go inside the askQuestions function
             resultEUR <- queryItemByCode "EUR" conn
             putStrLn $ "Latest EURO data: " ++ show(resultEUR)
 
@@ -53,7 +53,7 @@ main = do
             putStrLn $ "Latest USD data: " ++ show(resultUSD)
 
             resultGBP <- queryItemByCode "GBP" conn
-            putStrLn $ "Latest GBP data: " ++ show(resultGBP)-}
+            putStrLn $ "Latest GBP data: " ++ show(resultGBP)
 
             -- write https://api.coindesk.com/v1/bpi/currentprice.json to a file
             createJsonFile

@@ -13,8 +13,9 @@ module Database
     prepareInsertEurStmt,
     saveEurRecords,
     prepareInsertFKStmt,
-    saveFKRecords
-    --queryItemByCode
+    saveFKRecords,
+    queryItemByCode,
+    getCurrencyId
     ) where
 
 import Database.HDBC
@@ -150,13 +151,24 @@ saveEurRecords currency conn = do
      commit conn
 
 -- Query items from db
-{-queryItemByCode ::  IConnection conn => String -> conn -> IO [String]
+queryItemByCode ::  IConnection conn => String -> conn -> IO [String]
 queryItemByCode itemCode conn = do
-     stmt <- prepare conn "SELECT description, rate, rate_float FROM "++ map toLower itemCode ++" WHERE code = ?"
-     execute stmt [toSql itemCode]
-     rows <- fetchAllRows stmt 
-     return $ map fromSql $ head rows-}
+  stmt <- prepare conn query
+  execute stmt [toSql itemCode]
+  rows <- fetchAllRows stmt 
+  return $ map fromSql $ head rows
+  where
+    query = unlines $ ["SELECT description, rate, rate_float FROM "++ map toLower itemCode ++" WHERE code = ?"]
 
+
+getCurrencyId ::  IConnection conn => String -> conn -> IO [String]
+getCurrencyId currency conn = do
+  stmt <- prepare conn query
+  execute stmt []
+  rows <- fetchAllRows stmt 
+  return $ map fromSql $ head rows
+  where
+    query = unlines $ ["SELECT " ++ currency ++ "_id FROM "++ currency]
 
 --STILL TO DO
 -- insert data to currencys_updated keys     
