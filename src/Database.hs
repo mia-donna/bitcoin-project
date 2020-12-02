@@ -26,14 +26,16 @@ import Data.Char
 initialiseDB :: IO Connection
 initialiseDB =
  do
-    conn <- connectSqlite3 "bitcoin-test0.sqlite" 
+    conn <- connectSqlite3 "bitcoin-test2.sqlite" 
     run conn "CREATE TABLE IF NOT EXISTS currencys_last_updated (\
           \usd_id INTEGER NOT NULL, \
           \gbp_id INTEGER NOT NULL, \
           \eur_id INTEGER NOT NULL, \
+          \updated VARCHAR(40) NOT NULL, \ 
           \FOREIGN KEY (usd_id) REFERENCES usd(usd_id), \
           \FOREIGN KEY (gbp_id) REFERENCES usd(gbp_id), \
-          \FOREIGN KEY (eur_id) REFERENCES usd(eur_id) \
+          \FOREIGN KEY (eur_id) REFERENCES usd(eur_id), \
+          \FOREIGN KEY (updated) REFERENCES time(updated) \
           \) " []      
         --   \updated VARCHAR(40) NOT NULL, \        
         --   \FOREIGN KEY (updated) REFERENCES time(updated) \
@@ -44,7 +46,8 @@ initialiseDB =
           \rate VARCHAR(40) NOT NULL,  \
           \description VARCHAR(40) NOT NULL, \
           \rate_float DOUBLE,  \
-          \usd_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT \
+          \usd_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \
+          \FOREIGN KEY (usd_id) REFERENCES currencys_last_updated(usd_id) \
           \) " []       
         --   \usd_id INTEGER PRIMARY KEY, \
     commit conn
@@ -54,7 +57,8 @@ initialiseDB =
           \rate VARCHAR(40) NOT NULL,  \
           \description VARCHAR(40) NOT NULL, \
           \rate_float DOUBLE, \
-          \gbp_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT \
+          \gbp_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \
+          \FOREIGN KEY (gbp_id) REFERENCES currencys_last_updated(gbp_id) \
           \) " []
         --   \gbp_id INTEGER PRIMARY KEY, \
     commit conn
@@ -64,7 +68,8 @@ initialiseDB =
           \rate VARCHAR(40) NOT NULL,  \
           \description VARCHAR(40) NOT NULL, \
           \rate_float DOUBLE, \
-          \eur_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT \
+          \eur_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \
+          \FOREIGN KEY (eur_id) REFERENCES currencys_last_updated(eur_id) \
           \) " []
         --   \eur_id INTEGER PRIMARY KEY, \
     commit conn
@@ -72,7 +77,8 @@ initialiseDB =
           \updated VARCHAR(40) NOT NULL, \
           \updated_ISO VARCHAR(40) NOT NULL, \
           \updateduk VARCHAR(40) NOT NULL, \
-          \id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT \
+          \id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \
+          \FOREIGN KEY (updated) REFERENCES currencys_last_updated(updated) \
           \) " []                            
     commit conn
     return conn   
