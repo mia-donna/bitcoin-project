@@ -1,3 +1,4 @@
+-- |Module that performs and has access points for our functions
 {-# LANGUAGE BlockArguments #-}
 
 module Main where
@@ -12,38 +13,25 @@ main :: IO ()
 main = do
     let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
     json <- download url
-    print "Parsing... "
+    print "Parsing live bitcoin data from COINDESK... "
     case (parse json) of
         Left err -> print err
         Right bits -> do
-            print "The Bitcoin rate was last updated at: "
-            print (time bits)
-            -- print ("bpi: ")
-            -- print (bpi bits)
-            -- print(usd(bpi bits))
             let bpiData = bpi bits
             let usdCurrency = usd bpiData
             let gbpCurrency = gbp bpiData
             let eurCurrency = eur bpiData
-            print "USD Bitcoin Rate Info: "
-            print(usdCurrency)
-            print "GBP Bitcoin Rate Info: "
-            print(gbpCurrency)
-            print "EUR Bitcoin Rate Info: "
-            print(eurCurrency)
             conn <- initialiseDB
-            print"Initialized"
-            -- Saves time records to db
+            print"***  Database Initialized  ***"
             saveTimeRecords (time bits) conn
-            -- print "Time records saved to db!"
-            -- Saves currency records to db
+            print "Live TIME bitcoin data has been saved ..."
             saveUsdRecords (usdCurrency) conn
-            print "USD records saved to db!"
+            print "Live USD bitcoin data has been saved ..."
             saveGbpRecords (gbpCurrency) conn
-            print "GBP records saved to db!"
+            print "LIVE GBP bitcoin data has been saved ..."
             saveEurRecords (eurCurrency) conn
-            print "EUR records saved to db!"
-            print "All Data successfully saved to the Database."
+            print "LIVE EUR bitcoin data has been saved ..."
+            print "All LIVE data now successfully saved to the Database."
 
            -- This can later go inside the askQuestions function
             resultEUR <- queryItemByCode "EUR" conn
@@ -64,7 +52,7 @@ main = do
 
 -- Generates JSON data file
 createJsonFile = do
-    putStrLn $ "Now it's time to create a json file!! "
+    putStrLn $ "First it's time to create a json file from our parsed data "
     let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
     json <- download url
     case (parse json) of
@@ -152,3 +140,61 @@ askTime = do
                     Just time -> putStrLn $ "Time last updated was: " ++ show(getTime json)
     else
       putStrLn $ "Thank you for using the Bitcoin app"
+
+
+---- NOTES
+-- print ("bpi: ")
+            -- print (bpi bits)
+            -- print(usd(bpi bits))
+            -- print "The Bitcoin rate was last updated at: "
+            -- print (time bits)
+
+
+
+{-main :: IO ()
+main = do
+    let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
+    json <- download url
+    print "Parsing... "
+    case (parse json) of
+        Left err -> print err
+        Right bits -> do
+            let bpiData = bpi bits
+            let usdCurrency = usd bpiData
+            let gbpCurrency = gbp bpiData
+            let eurCurrency = eur bpiData
+            print "USD Bitcoin Rate Info: "
+            print(usdCurrency)
+            print "GBP Bitcoin Rate Info: "
+            print(gbpCurrency)
+            print "EUR Bitcoin Rate Info: "
+            print(eurCurrency)
+            conn <- initialiseDB
+            print"Initialized"
+            -- Saves time records to db
+            saveTimeRecords (time bits) conn
+            -- print "Time records saved to db!"
+            -- Saves currency records to db
+            saveUsdRecords (usdCurrency) conn
+            print "USD records saved to db!"
+            saveGbpRecords (gbpCurrency) conn
+            print "GBP records saved to db!"
+            saveEurRecords (eurCurrency) conn
+            print "EUR records saved to db!"
+            print "All Data successfully saved to the Database."
+
+           -- This can later go inside the askQuestions function
+            resultEUR <- queryItemByCode "EUR" conn
+            putStrLn $ "Latest EURO data: " ++ show(resultEUR)
+
+            resultUSD <- queryItemByCode "USD" conn
+            putStrLn $ "Latest USD data: " ++ show(resultUSD)
+
+            resultGBP <- queryItemByCode "GBP" conn
+            putStrLn $ "Latest GBP data: " ++ show(resultGBP)
+
+            -- write https://api.coindesk.com/v1/bpi/currentprice.json to a file
+            createJsonFile
+            askQuestions
+            askTime
+    putStrLn "All done. Disconnecting"-}            

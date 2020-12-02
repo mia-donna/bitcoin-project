@@ -1,3 +1,4 @@
+-- |MODULE that performs parsing of our html url and also creates Haskell data types
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -15,7 +16,7 @@ import Data.Aeson.TH(deriveJSON, defaultOptions, Options(fieldLabelModifier))
 import Control.Lens ( preview )
 import Data.Aeson.Lens ( key, _String )
 
--- CURRENCY
+-- |CREATING A HASKELL DATA TYPE FOR CURRENCY
 
 data Currency = Currency {
      code :: String,
@@ -25,7 +26,7 @@ data Currency = Currency {
      rate_float :: Double
  } deriving (Show, Generic)
 
- -- BPI
+-- |CREATING A HASKELL DATA TYPE FOR BPI
 
 data Bpi = Bpi {
    usd :: Currency,
@@ -33,7 +34,7 @@ data Bpi = Bpi {
    eur :: Currency
 } deriving (Show, Generic)
 
--- This converts currency from lower to uppercase (eg. usd to USD)
+-- |This converts currency from lower to uppercase (eg. usd to USD)
 $(deriveJSON defaultOptions {
     fieldLabelModifier = \x -> 
         if x == "usd" 
@@ -44,14 +45,14 @@ $(deriveJSON defaultOptions {
             then "EUR" 
         else x} ''Bpi)
 
--- TIME
+-- |CREATING A HASKELL DATA TYPE FOR TIME
 data Time = Time {
     updated :: String,
     updatedISO :: String, 
     updateduk :: String
 }  deriving (Show, Generic)
 
--- BITCOIN
+-- |CREATING A HASKELL DATA TYPE FOR BITCOIN
 data Bitcoin = Bitcoin {
    time :: Time,
    disclaimer :: String,
@@ -59,7 +60,7 @@ data Bitcoin = Bitcoin {
    bpi :: Bpi
 } deriving (Show, Generic)
 
--- Instances 
+-- |OUR ToJSON and FromJSON instances
 instance FromJSON Bitcoin
 instance ToJSON Bitcoin
 
@@ -69,22 +70,11 @@ instance ToJSON Time
 instance FromJSON Currency
 instance ToJSON Currency
 
--- Datatype for the list of Currencys (like list of Records) -- as I couldn't get currencys to map to db, maybe we need to create a new datatype for currency
---data Currencys = Currencys {
---            currencys :: [Currency]
---      }  deriving (Show, Generic)
-
---instance FromJSON Currencys
---instance ToJSON Currencys 
-
+-- |PERFORMS PARSING of all our BITCOIN DATA 
 parse :: L8.ByteString -> Either String Bitcoin
 parse json = eitherDecode json :: Either String Bitcoin
 
---parseCurrencys :: L8.ByteString -> Either String Currencys
---parseCurrencys json = eitherDecode json :: Either String Currencys
-  
---encodeFile :: ToJSON a => FilePath -> a -> IO ()
---encodeFile = encodeFile json :: 
+-- |PERFORMS PARSING of our TIME data using LENS
 
 getTime :: L8.ByteString -> Maybe Text
 getTime = preview (key "time" . key "updated" . _String)
