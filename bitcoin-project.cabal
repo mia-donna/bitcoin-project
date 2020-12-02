@@ -44,6 +44,7 @@ library
     , HDBC
     , lens
     , lens-aeson
+    , unordered-containers
   default-language: Haskell2010
 
 executable bitcoin-project-exe
@@ -60,6 +61,7 @@ executable bitcoin-project-exe
     , bytestring
     , http-conduit
     , text
+    , unordered-containers
   default-language: Haskell2010
 
 test-suite bitcoin-project-test

@@ -15,6 +15,8 @@ import Data.Text ( Text )
 import Data.Aeson.TH(deriveJSON, defaultOptions, Options(fieldLabelModifier))
 import Control.Lens ( preview )
 import Data.Aeson.Lens ( key, _String )
+import qualified Data.HashMap.Strict as HM 
+
 
 -- |CREATING A HASKELL DATA TYPE FOR CURRENCY
 
@@ -78,3 +80,7 @@ parse json = eitherDecode json :: Either String Bitcoin
 
 getTime :: L8.ByteString -> Maybe Text
 getTime = preview (key "time" . key "updated" . _String)
+
+-- WIP attempt at json file dump from db
+bpiEncode :: [Bpi] -> Object
+bpiEncode = HM.unions . map (\(Object bpi) -> bpi) . map toJSON

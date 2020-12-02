@@ -6,7 +6,9 @@ module Main where
 import HTTP
 import Parse
 import Database
-import Data.Aeson ( encodeFile )
+import Data.Aeson ( encodeFile, encode )
+import qualified Data.ByteString.Lazy.Char8 as L8
+
 
 -- || MAIN FUNCTION : Access points for parsing live data, saving data to the db, creating a json file and asking questions
 main :: IO ()
@@ -21,6 +23,8 @@ main = do
             let usdCurrency = usd bpiData
             let gbpCurrency = gbp bpiData
             let eurCurrency = eur bpiData
+            let writeDB = encode $ bpiData 
+            L8.writeFile "DB.json" writeDB
             conn <- initialiseDB
             print"***  Database Initialized  ***"
             saveTimeRecords (time bits) conn
@@ -104,3 +108,7 @@ askTime = do
                     Just time -> putStrLn $ "The Time the bitcoin currencies were last updated was: " ++ show(getTime json)
     else
       putStrLn $ "Thank you for using the Bitcoin app"        
+
+
+ {- writes json version of bpi: L8.putStrLn $ encode $ bpiData -}     
+      
