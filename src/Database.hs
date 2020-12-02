@@ -86,6 +86,7 @@ initialiseDB =
     commit conn
     return conn   
 {-\FOREIGN KEY (updated) REFERENCES currencys_last_updated(updated) \-}
+
 -- CONVERT OUR HASKELL DATATYPES TOSQL
 
 -- || TO SQL

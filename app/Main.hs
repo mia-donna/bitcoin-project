@@ -112,8 +112,4 @@ askTime = do
                     Nothing -> putStrLn $ "Could not find the Bitcoin time :("
                     Just time -> putStrLn $ "The Time the bitcoin currencies were last updated was: " ++ show(getTime json)
     else
-      putStrLn $ "Thank you for using the Bitcoin app"        
-
-
- {- writes json version of bpi: L8.putStrLn $ encode $ bpiData -}     
-      
+      putStrLn $ "Thank you for using the Bitcoin app"              
