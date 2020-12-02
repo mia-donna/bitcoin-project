@@ -7,7 +7,6 @@ import HTTP
 import Parse
 import Database
 import Data.Aeson ( encodeFile )
-import qualified Data.Text.IO as TIO
 
 -- || MAIN FUNCTION : Access points for parsing live data, saving data to the db, creating a json file and asking questions
 main :: IO ()
@@ -25,9 +24,9 @@ main = do
             conn <- initialiseDB
             print"***  Database Initialized  ***"
             saveTimeRecords (time bits) conn
-            print "Live TIME bitcoin data has been saved ..."
+            print "LIVE TIME bitcoin data has been saved ..."
             saveUsdRecords (usdCurrency) conn
-            print "Live USD bitcoin data has been saved ..."
+            print "LIVE USD bitcoin data has been saved ..."
             saveGbpRecords (gbpCurrency) conn
             print "LIVE GBP bitcoin data has been saved ..."
             saveEurRecords (eurCurrency) conn
@@ -61,28 +60,28 @@ createJsonFile = do
 
 -- || ASK QUERIES 1: We ask our user questions and pull data from our db to answer them
 askQuestions = do
-   putStrLn $ "Now for queries. Which Bitcoin currency you would like to query? Enter USD, GBP or EUR"
+   putStrLn $ "Now for queries. Which Bitcoin currency rate you would like to query? Enter USD, GBP or EUR"
    putStrLn $ "(type anything else to quit)"
    currencyAnswer <- getLine
    if currencyAnswer == "EUR" then
       do
          conn <- initialiseDB
          resultEUR <- queryItemByCode "EUR" conn
-         putStrLn $ "Here's the latest EURO data: " ++ show(resultEUR)
+         putStrLn $ "Here's the latest EURO rate data: " ++ show(resultEUR)
     else
       putStrLn $ "Thank you for using the Bitcoin app"
    if currencyAnswer == "GBP" then
       do
          conn <- initialiseDB
          resultGBP <- queryItemByCode "GBP" conn
-         putStrLn $ "Here's the latest GBP data: " ++ show(resultGBP) 
+         putStrLn $ "Here's the latest GBP rate data: " ++ show(resultGBP) 
     else
       putStrLn $ "Thank you for using the Bitcoin app"
    if currencyAnswer == "USD" then
       do
          conn <- initialiseDB
          resultUSD <- queryItemByCode "USD" conn
-         putStrLn $ "Here's the latest USD data: " ++ show(resultUSD)
+         putStrLn $ "Here's the latest USD rate data: " ++ show(resultUSD)
     else
       putStrLn $ "Thank you for using the Bitcoin app"
 
