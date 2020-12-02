@@ -81,6 +81,6 @@ parse json = eitherDecode json :: Either String Bitcoin
 getTime :: L8.ByteString -> Maybe Text
 getTime = preview (key "time" . key "updated" . _String)
 
--- WIP attempt at json file dump from db
+-- |PERFORMS DB DUMP conversion of Haskell -> JSON for json file
 bpiEncode :: [Bpi] -> Object
 bpiEncode = HM.unions . map (\(Object bpi) -> bpi) . map toJSON

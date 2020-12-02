@@ -23,8 +23,8 @@ main = do
             let usdCurrency = usd bpiData
             let gbpCurrency = gbp bpiData
             let eurCurrency = eur bpiData
-            let writeDB = encode $ bpiData 
-            L8.writeFile "DB.json" writeDB
+            --let writeDB = encode $ bpiData 
+            --L8.writeFile "DB.json" writeDB
             conn <- initialiseDB
             print"***  Database Initialized  ***"
             saveTimeRecords (time bits) conn
@@ -36,29 +36,34 @@ main = do
             saveEurRecords (eurCurrency) conn
             print "LIVE EUR bitcoin data has been saved ..."
             print "All LIVE data now successfully saved to the Database."
-            createJsonFile
+            createJsonFiles
             askQuestions
             askTime
     putStrLn "All done. Disconnecting"        
 
 
 -- || JSON FILE: This generates JSON representation from our parsed haskell data and dumps it to a file
-createJsonFile = do
-    putStrLn $ "First it's time to create a json file from our parsed data "
+createJsonFiles = do
+    putStrLn $ "First it's time to create two json files from our parsed data and database."
     let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
     json <- download url
     case (parse json) of
         Left err -> print err
         Right bits -> do
+            let bpiData = bpi bits
+            let writeDB = encode $ bpiData
             print "Want to generate a json representation of our haskell data? Enter 'yes' if yes, or type anything else to move to queries."
             x <- getLine
             if x == "yes" then
                 do    
-                    print "Writing bitcoin data to new file 'bitcoin.json'....." 
+                    print "Awesome! First we're parsing and writing live bitcoin data to new file 'bitcoin.json'....." 
                     let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
                     json <- download url
                     let jsonString = (parse json) 
                     encodeFile "bitcoin.json" jsonString
+                    print "Done! Now we're generating another file directly from the database on bpi data..."
+                    L8.writeFile "DB-BPI.json" writeDB
+                    print "Great! Now you've got a second file DB-BPI.json from our database with just the latest BPI data."
             else 
                 putStrLn "Alright, no file output created this time." 
 
