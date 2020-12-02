@@ -1,3 +1,4 @@
+-- |Module that performs http requests
 module HTTP
     ( download
     ) where

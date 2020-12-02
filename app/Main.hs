@@ -1,3 +1,4 @@
+-- |Module that performs and has access points for our functions
 {-# LANGUAGE BlockArguments #-}
 
 module Main where
@@ -5,137 +6,110 @@ module Main where
 import HTTP
 import Parse
 import Database
-import Data.Aeson ( encodeFile )
+import Data.Aeson ( encodeFile, encode )
+import qualified Data.ByteString.Lazy.Char8 as L8
 
+
+-- || MAIN FUNCTION : Access points for parsing live data, saving data to the db, creating a json file and asking questions
 main :: IO ()
 main = do
     let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
     json <- download url
-    print "Parsing... "
+    print "Parsing live bitcoin data from COINDESK... "
     case (parse json) of
         Left err -> print err
         Right bits -> do
-            print "The Bitcoin rate was last updated at: "
-            print (time bits)
-            -- print ("bpi: ")
-            -- print (bpi bits)
-            -- print(usd(bpi bits))
             let bpiData = bpi bits
             let usdCurrency = usd bpiData
             let gbpCurrency = gbp bpiData
             let eurCurrency = eur bpiData
-            print "USD Bitcoin Rate Info: "
-            print(usdCurrency)
-            print "GBP Bitcoin Rate Info: "
-            print(gbpCurrency)
-            print "EUR Bitcoin Rate Info: "
-            print(eurCurrency)
+            --let writeDB = encode $ bpiData 
+            --L8.writeFile "DB.json" writeDB
             conn <- initialiseDB
-            print"Initialized"
-            -- Saves time records to db
+            print"***  Database Initialized  ***"
             saveTimeRecords (time bits) conn
-            -- print "Time records saved to db!"
-            -- Saves currency records to db
+            print "LIVE TIME bitcoin data has been saved ..."
             saveUsdRecords (usdCurrency) conn
-            print "USD records saved to db!"
+            print "LIVE USD bitcoin data has been saved ..."
             saveGbpRecords (gbpCurrency) conn
-            print "GBP records saved to db!"
+            print "LIVE GBP bitcoin data has been saved ..."
             saveEurRecords (eurCurrency) conn
-            print "EUR records saved to db!"
-            print "All Data successfully saved to the Database."
-            -- write https://api.coindesk.com/v1/bpi/currentprice.json to a file
-            createJsonFile
+            print "LIVE EUR bitcoin data has been saved ..."
+            print "All LIVE data now successfully saved to the Database."
+            createJsonFiles
             askQuestions
+            askTime
     putStrLn "All done. Disconnecting"        
 
 
--- Generates JSON data file
-createJsonFile = do
-    putStrLn $ "Now it's time to create a json file!! "
+-- || JSON FILE: This generates JSON representation from our parsed haskell data and dumps it to a file
+createJsonFiles = do
+    putStrLn $ "First it's time to create two json files from our parsed data and database."
     let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
     json <- download url
     case (parse json) of
         Left err -> print err
         Right bits -> do
+            let bpiData = bpi bits
+            let writeDB = encode $ bpiData
             print "Want to generate a json representation of our haskell data? Enter 'yes' if yes, or type anything else to move to queries."
             x <- getLine
             if x == "yes" then
                 do    
-                    print "Writing bitcoin data to file....." 
+                    print "Awesome! First we're parsing and writing live bitcoin data to new file 'bitcoin.json'....." 
                     let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
                     json <- download url
                     let jsonString = (parse json) 
                     encodeFile "bitcoin.json" jsonString
+                    print "Done! Now we're generating another file directly from the database on bpi data..."
+                    L8.writeFile "DB-BPI.json" writeDB
+                    print "Great! Now you've got a second file DB-BPI.json from our database with just the latest BPI data."
             else 
                 putStrLn "Alright, no file output created this time." 
 
+-- || ASK QUERIES 1: We ask our user questions and pull data from our db to answer them
 askQuestions = do
-   putStrLn $ "Now for queries. Which Bitcoin currency you would like to query? Enter USD, GBP or EUR"
+   putStrLn $ "Now for queries. Which Bitcoin currency rate you would like to query? Enter USD, GBP or EUR"
    putStrLn $ "(type anything else to quit)"
    currencyAnswer <- getLine
    if currencyAnswer == "EUR" then
       do
-         print "Retrieving latest EURO Bitcoin data ....."
-         let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
-         json <- download url
-         case (parse json) of
-            Left err -> print err
-            Right bits -> do
-               let bpiData = bpi bits
-               let eurCurrency = eur bpiData
-               putStrLn $ "Latest EURO data: " ++ show(eurCurrency)
+         conn <- initialiseDB
+         resultEUR <- queryItemByCode "EUR" conn
+         putStrLn $ "Here's the latest EURO rate data: " ++ show(resultEUR)
     else
       putStrLn $ "Thank you for using the Bitcoin app"
    if currencyAnswer == "GBP" then
-            do
-         print "Retrieving latest GBP STERLING Bitcoin data ....."
-         let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
-         json <- download url
-         case (parse json) of
-            Left err -> print err
-            Right bits -> do
-               let bpiData = bpi bits
-               let gbpCurrency = gbp bpiData
-               putStrLn $ "Latest GBP data: " ++ show(gbpCurrency)
+      do
+         conn <- initialiseDB
+         resultGBP <- queryItemByCode "GBP" conn
+         putStrLn $ "Here's the latest GBP rate data: " ++ show(resultGBP) 
     else
       putStrLn $ "Thank you for using the Bitcoin app"
    if currencyAnswer == "USD" then
-            do
-         print "Retrieving latest USD Bitcoin data ....."
-         let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
-         json <- download url
-         case (parse json) of
-            Left err -> print err
-            Right bits -> do
-               let bpiData = bpi bits
-               let usdCurrency = usd bpiData
-               putStrLn $ "Latest USD data: " ++ show(usdCurrency)
-    else
-      putStrLn $ "Thank you for using the Bitcoin app"
-
-
--- STILL TO DO:
--- Keys in the DB not working
--- Clean up data types in main functions - separate into functions and get rid of repeated data
--- Clean up data types in db functions    
--- Work out how to print just one data point from time e.g. "updated" 
--- IF TIME:
--- Work out how to grab the specific keys for currency e.g. "rate"
-
-askTime = do
-   putStrLn $ ""
-   putStrLn $ "(type anything else to quit)"
-   currencyAnswer <- getLine
-   if currencyAnswer == "EUR" then
       do
-         print "Retrieving latest EURO Bitcoin data ....."
+         conn <- initialiseDB
+         resultUSD <- queryItemByCode "USD" conn
+         putStrLn $ "Here's the latest USD rate data: " ++ show(resultUSD)
+    else
+      putStrLn $ "Thank you for using the Bitcoin app"
+
+
+-- || ASK QUERIES 2: We ask our user if they want time data and we use previews and keys to parse and grab from url 
+askTime = do 
+   putStrLn $ "Would you like to know when the bitcoin rate was last updated? Type 'yes' to proceed"
+   putStrLn $ "(type anything else to quit)"
+   timeAnswer <- getLine
+   if timeAnswer == "yes" then
+      do
+         print "Retrieving latest TIME Bitcoin data ....."
          let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
          json <- download url
          case (parse json) of
             Left err -> print err
             Right bits -> do
-               let bpiData = bpi bits
-               let eurCurrency = eur bpiData
-               putStrLn $ "Latest EURO data: " ++ show(eurCurrency)
+               case getTime json of 
+                    Nothing -> putStrLn $ "Could not find the Bitcoin time :("
+                    Just time -> putStrLn $ "The Time the bitcoin currencies were last updated was: " ++ show(getTime json)
     else
-      putStrLn $ "Thank you for using the Bitcoin app"
+      putStrLn $ "Thank you for using the Bitcoin app"              
