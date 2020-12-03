@@ -63,7 +63,7 @@ createJsonFiles = do
             let writeDB = encode $ bpiData
             print "Want to generate a json representation of our haskell data? Enter 'yes' if yes, or type anything else to move to queries."
             x <- getLine
-            if elem timeAnswer ["yes", "YES", "y", "Y"] then
+            if elem x ["yes", "YES", "y", "Y"] then
                 do    
                     print "Awesome! First we're parsing and writing live bitcoin data to new file 'bitcoin.json'....." 
                     let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
