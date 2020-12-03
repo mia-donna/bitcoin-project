@@ -161,7 +161,7 @@ queryItemByCode itemCode conn = do
   stmt <- prepare conn query
   execute stmt [toSql itemCode]
   rows <- fetchAllRows stmt 
-  return $ map fromSql $ head rows
+  return $ map fromSql $ last rows -- Makes sure you return only last (most recent) row - this is to provide LIVE data
   where
     query = unlines $ ["SELECT description, rate, rate_float FROM "++ map toLower itemCode ++" WHERE code = ?"]
 
@@ -171,7 +171,7 @@ getCurrencyId currency conn = do
   stmt <- prepare conn query
   execute stmt []
   rows <- fetchAllRows stmt 
-  return $ head $ map fromSql $ head rows
+  return $ head $ map fromSql $ last rows -- Makes sure you return only last (most recent) row - to retrieve most recent ids
   where
     query = unlines $ ["SELECT " ++ currency ++ "_id FROM "++ currency]
 
@@ -181,7 +181,7 @@ queryTime conn = do
   stmt <- prepare conn query
   execute stmt []
   rows <- fetchAllRows stmt 
-  return $ head $ map fromSql $ head rows
+  return $ head $ map fromSql $ last rows -- Makes sure you return only last (most recent) row - this is to provide LIVE data
   where
     query = unlines $ ["SELECT updated FROM time"]
 
