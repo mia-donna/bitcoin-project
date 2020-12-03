@@ -14,8 +14,6 @@ module Database
     saveUsdRecords,
     prepareInsertEurStmt,
     saveEurRecords,
-    prepareInsertFKStmt,
-    saveFKRecords,
     queryItemByCode,
     getCurrencyId,
     insertIntoLinkingTable,
