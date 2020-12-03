@@ -47,9 +47,9 @@ linkTables conn = do
    usdId <- getCurrencyId "usd" conn
    gbpId <- getCurrencyId "gbp" conn
    eurId <- getCurrencyId "eur" conn
-   time <- queryTime conn
-   insertIntoLinkingTable usdId gbpId eurId time conn
-   putStrLn $ "All LIVE data now successfully saved, data last updated at: " ++ show(time)
+   time_updated <- queryTime conn
+   insertIntoLinkingTable usdId gbpId eurId time_updated conn
+   putStrLn $ "All LIVE data now successfully saved, data last updated at: " ++ show(time_updated)
 
 -- || JSON FILE: This generates JSON representation from our parsed haskell data and dumps it to a file
 createJsonFiles = do
@@ -63,7 +63,7 @@ createJsonFiles = do
             let writeDB = encode $ bpiData
             print "Want to generate a json representation of our haskell data? Enter 'yes' if yes, or type anything else to move to queries."
             x <- getLine
-            if x == "yes" then
+            if elem timeAnswer ["yes", "YES", "y", "Y"] then
                 do    
                     print "Awesome! First we're parsing and writing live bitcoin data to new file 'bitcoin.json'....." 
                     let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
@@ -81,17 +81,17 @@ askQuestions = do
    putStrLn $ "Now for queries. Which Bitcoin currency rate you would like to query? Enter USD, GBP or EUR"
    putStrLn $ "(type anything else to quit)"
    currencyAnswer <- getLine
-   if currencyAnswer == "EUR" then
+   if elem currencyAnswer ["EUR", "eur"] then
       do
          conn <- initialiseDB
          resultEUR <- queryItemByCode "EUR" conn
          putStrLn $ "Here's the latest EURO rate data: " ++ show(resultEUR)
-   else if currencyAnswer == "GBP" then
+   else if elem currencyAnswer ["GBP", "gbp"] then
       do
          conn <- initialiseDB
          resultGBP <- queryItemByCode "GBP" conn
          putStrLn $ "Here's the latest GBP rate data: " ++ show(resultGBP) 
-   else if currencyAnswer == "USD" then
+   else if elem currencyAnswer ["USD", "usd"] then
       do
          conn <- initialiseDB
          resultUSD <- queryItemByCode "USD" conn
@@ -105,7 +105,7 @@ askTime = do
    putStrLn $ "Would you like to know when the bitcoin rate was last updated? Type 'yes' to proceed"
    putStrLn $ "(type anything else to quit)"
    timeAnswer <- getLine
-   if timeAnswer == "yes" then
+   if elem timeAnswer ["yes", "YES", "y", "Y"] then
       do
          print "Retrieving latest time Bitcoin data ....."
          let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
