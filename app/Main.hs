@@ -35,12 +35,21 @@ main = do
             print "LIVE GBP bitcoin data has been saved ..."
             saveEurRecords (eurCurrency) conn
             print "LIVE EUR bitcoin data has been saved ..."
-            print "All LIVE data now successfully saved to the Database."
+            linkTables conn
             createJsonFiles
             askQuestions
             askTime
     putStrLn "All done. Disconnecting"        
 
+
+-- || SAVE FOREIGN KEY DATA: This creates a linking table in the database that introduces relationships between tables
+linkTables conn = do
+   usdId <- getCurrencyId "usd" conn
+   gbpId <- getCurrencyId "gbp" conn
+   eurId <- getCurrencyId "eur" conn
+   time <- queryTime conn
+   insertIntoLinkingTable usdId gbpId eurId time conn
+   putStrLn $ "All LIVE data now successfully saved, data last updated at: " ++ show(time)
 
 -- || JSON FILE: This generates JSON representation from our parsed haskell data and dumps it to a file
 createJsonFiles = do
@@ -77,21 +86,17 @@ askQuestions = do
          conn <- initialiseDB
          resultEUR <- queryItemByCode "EUR" conn
          putStrLn $ "Here's the latest EURO rate data: " ++ show(resultEUR)
-    else
-      putStrLn $ "Thank you for using the Bitcoin app"
-   if currencyAnswer == "GBP" then
+   else if currencyAnswer == "GBP" then
       do
          conn <- initialiseDB
          resultGBP <- queryItemByCode "GBP" conn
          putStrLn $ "Here's the latest GBP rate data: " ++ show(resultGBP) 
-    else
-      putStrLn $ "Thank you for using the Bitcoin app"
-   if currencyAnswer == "USD" then
+   else if currencyAnswer == "USD" then
       do
          conn <- initialiseDB
          resultUSD <- queryItemByCode "USD" conn
          putStrLn $ "Here's the latest USD rate data: " ++ show(resultUSD)
-    else
+   else
       putStrLn $ "Thank you for using the Bitcoin app"
 
 
@@ -111,5 +116,5 @@ askTime = do
                case getTime json of 
                     Nothing -> putStrLn $ "Could not find the Bitcoin time :("
                     Just time -> putStrLn $ "The Time the bitcoin currencies were last updated was: " ++ show(getTime json)
-    else
+   else
       putStrLn $ "Thank you for using the Bitcoin app"              
