@@ -17,7 +17,9 @@ module Database
     prepareInsertFKStmt,
     saveFKRecords,
     queryItemByCode,
-    getCurrencyId
+    getCurrencyId,
+    insertIntoLinkingTable,
+    queryTime
     ) where
 
 import Database.HDBC
@@ -27,25 +29,23 @@ import Parse
       Time(updated, updatedISO, updateduk) )
 import Data.Char
 
--- || INITIALISE OUR DB AND CREATE TABLES AND KEYS
+-- || INITIALIZE OUR DB AND CREATE TABLES AND KEYS
 
 initialiseDB :: IO Connection
 initialiseDB =
  do
     conn <- connectSqlite3 "bitcoin-test2.sqlite"
-    runRaw conn "COMMIT; PRAGMA foreign_keys = ON; BEGIN TRANSACTION" 
-    run conn "CREATE TABLE IF NOT EXISTS currencys_last_updated (\
+    -- runRaw conn "COMMIT; PRAGMA foreign_keys = ON; BEGIN TRANSACTION" 
+    run conn "CREATE TABLE IF NOT EXISTS linkingTable (\
           \usd_id INTEGER NOT NULL, \
           \gbp_id INTEGER NOT NULL, \
           \eur_id INTEGER NOT NULL, \
-          \updated VARCHAR(40) NOT NULL, \ 
+          \updated VARCHAR(40) NOT NULL, \        
           \FOREIGN KEY (usd_id) REFERENCES usd(usd_id), \
           \FOREIGN KEY (gbp_id) REFERENCES usd(gbp_id), \
-          \FOREIGN KEY (eur_id) REFERENCES usd(eur_id), \
+          \FOREIGN KEY (eur_id) REFERENCES usd(eur_id) \
           \FOREIGN KEY (updated) REFERENCES time(updated) \
-          \) " []      
-        --   \updated VARCHAR(40) NOT NULL, \        
-        --   \FOREIGN KEY (updated) REFERENCES time(updated) \
+          \) " []  
     commit conn
     run conn "CREATE TABLE IF NOT EXISTS usd (\
           \code VARCHAR(40) NOT NULL, \
@@ -85,7 +85,7 @@ initialiseDB =
           \) " []                            
     commit conn
     return conn   
-{-\FOREIGN KEY (updated) REFERENCES currencys_last_updated(updated) \-}
+{-\FOREIGN KEY (updated) REFERENCES linkingTable(updated) \-}
 
 -- CONVERT OUR HASKELL DATATYPES TOSQL
 
@@ -109,7 +109,7 @@ currencyToSqlValues currency = [
     ]   
 
 -- || TIME
--- |PREPARE TIME : This prepares our db conenction and takes our SQL statement
+-- |PREPARE TIME : This prepares our db connection and takes our SQL statement
 prepareInsertTimeStmt :: Connection -> IO Statement
 prepareInsertTimeStmt conn = prepare conn "INSERT INTO time (updated, updated_ISO, updateduk) VALUES (?,?,?)"
 
@@ -121,7 +121,7 @@ saveTimeRecords time conn = do
      commit conn    
 
 -- || CURRENCYS
--- |PREPARE GBP : This prepares our db conenction and takes our SQL statement
+-- |PREPARE GBP : This prepares our db connection and takes our SQL statement
 prepareInsertGbpStmt :: Connection -> IO Statement
 prepareInsertGbpStmt conn = prepare conn "INSERT INTO gbp (code, symbol, rate, description, rate_float) VALUES (?,?,?,?,?)"
 
@@ -132,7 +132,7 @@ saveGbpRecords currency conn = do
      execute stmt (currencyToSqlValues currency) 
      commit conn
 
--- |PREPARE USD : This prepares our db conenction and takes our SQL statement
+-- |PREPARE USD : This prepares our db connection and takes our SQL statement
 prepareInsertUsdStmt :: Connection -> IO Statement
 prepareInsertUsdStmt conn = prepare conn "INSERT INTO usd (code, symbol, rate, description, rate_float) VALUES (?,?,?,?,?)"
 
@@ -143,7 +143,7 @@ saveUsdRecords currency conn = do
      execute stmt (currencyToSqlValues currency) 
      commit conn
 
--- |PREPARE EUR : This prepares our db conenction and takes our SQL statement
+-- |PREPARE EUR : This prepares our db connection and takes our SQL statement
 prepareInsertEurStmt :: Connection -> IO Statement
 prepareInsertEurStmt conn = prepare conn "INSERT INTO eur (code, symbol, rate, description, rate_float) VALUES (?,?,?,?,?)"
 
@@ -161,24 +161,38 @@ queryItemByCode itemCode conn = do
   stmt <- prepare conn query
   execute stmt [toSql itemCode]
   rows <- fetchAllRows stmt 
-  return $ map fromSql $ head rows
+  return $ map fromSql $ last rows -- Makes sure you return only last (most recent) row - this is to provide LIVE data
   where
     query = unlines $ ["SELECT description, rate, rate_float FROM "++ map toLower itemCode ++" WHERE code = ?"]
 
 -- | BY ID: This selects currency id
-getCurrencyId ::  IConnection conn => String -> conn -> IO [String]
+getCurrencyId ::  IConnection conn => String -> conn -> IO String
 getCurrencyId currency conn = do
   stmt <- prepare conn query
   execute stmt []
   rows <- fetchAllRows stmt 
-  return $ map fromSql $ head rows
+  return $ head $ map fromSql $ last rows -- Makes sure you return only last (most recent) row - to retrieve most recent ids
   where
     query = unlines $ ["SELECT " ++ currency ++ "_id FROM "++ currency]
 
+-- | TIME : This gets value updated from time table 
+queryTime ::  IConnection conn => conn -> IO String
+queryTime conn = do
+  stmt <- prepare conn query
+  execute stmt []
+  rows <- fetchAllRows stmt 
+  return $ head $ map fromSql $ last rows -- Makes sure you return only last (most recent) row - this is to provide LIVE data
+  where
+    query = unlines $ ["SELECT updated FROM time"]
 
-
-
-
+-- || SAVE RETRIEVED VALUES TO THE linkingTable TABLE
+insertIntoLinkingTable :: IConnection conn => String -> String -> String -> String -> conn -> IO ()
+insertIntoLinkingTable usd_id gbp_id eur_id time conn = do
+  stmt <- prepare conn query
+  execute stmt []
+  commit conn
+  where 
+    query = unlines $ ["INSERT INTO linkingTable (usd_id, gbp_id, eur_id, updated) VALUES ("++ usd_id ++","++ gbp_id ++","++ eur_id ++ ",'"++ time ++ "')"]
 
 
 -------------------WIP--------------------
@@ -186,7 +200,7 @@ getCurrencyId currency conn = do
 -- insert data to currencys_updated keys     
 
 
---FORIEGN KEYS
+--FOREIGN KEYS
 -- Next create a function to prepare Currency 
 prepareInsertFKStmt :: Connection -> IO Statement
 prepareInsertFKStmt conn = prepare conn "INSERT INTO currencys_last_updated ( updated ) VALUES (?) SELECT updated FROM time"
