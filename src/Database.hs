@@ -14,8 +14,6 @@ module Database
     saveUsdRecords,
     prepareInsertEurStmt,
     saveEurRecords,
-    prepareInsertFKStmt,
-    saveFKRecords,
     queryItemByCode,
     getCurrencyId,
     insertIntoLinkingTable,
@@ -35,7 +33,6 @@ initialiseDB :: IO Connection
 initialiseDB =
  do
     conn <- connectSqlite3 "bitcoin-test2.sqlite"
-    -- runRaw conn "COMMIT; PRAGMA foreign_keys = ON; BEGIN TRANSACTION" 
     run conn "CREATE TABLE IF NOT EXISTS linkingTable (\
           \usd_id INTEGER NOT NULL, \
           \gbp_id INTEGER NOT NULL, \
@@ -55,7 +52,6 @@ initialiseDB =
           \rate_float DOUBLE,  \
           \usd_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT \
           \) " []       
-        --   \usd_id INTEGER PRIMARY KEY, \
     commit conn
     run conn "CREATE TABLE IF NOT EXISTS gbp (\
           \code VARCHAR(40) NOT NULL, \
@@ -65,7 +61,6 @@ initialiseDB =
           \rate_float DOUBLE, \
           \gbp_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT \
           \) " []
-        --   \gbp_id INTEGER PRIMARY KEY, \
     commit conn
     run conn "CREATE TABLE IF NOT EXISTS eur (\
           \code VARCHAR(40) NOT NULL, \
@@ -75,7 +70,6 @@ initialiseDB =
           \rate_float DOUBLE, \
           \eur_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT \
           \) " []
-        --   \eur_id INTEGER PRIMARY KEY, \
     commit conn
     run conn "CREATE TABLE IF NOT EXISTS time (\
           \updated VARCHAR(40) NOT NULL, \
@@ -85,7 +79,7 @@ initialiseDB =
           \) " []                            
     commit conn
     return conn   
-{-\FOREIGN KEY (updated) REFERENCES linkingTable(updated) \-}
+
 
 -- CONVERT OUR HASKELL DATATYPES TOSQL
 
@@ -163,7 +157,7 @@ queryItemByCode itemCode conn = do
   rows <- fetchAllRows stmt 
   return $ map fromSql $ last rows -- Makes sure you return only last (most recent) row - this is to provide LIVE data
   where
-    query = unlines $ ["SELECT description, rate, rate_float FROM "++ map toLower itemCode ++" WHERE code = ?"]
+    query = unlines $ ["SELECT rate FROM "++ map toLower itemCode ++" WHERE code = ?"]
 
 -- | BY ID: This selects currency id
 getCurrencyId ::  IConnection conn => String -> conn -> IO String
@@ -193,21 +187,3 @@ insertIntoLinkingTable usd_id gbp_id eur_id time conn = do
   commit conn
   where 
     query = unlines $ ["INSERT INTO linkingTable (usd_id, gbp_id, eur_id, updated) VALUES ("++ usd_id ++","++ gbp_id ++","++ eur_id ++ ",'"++ time ++ "')"]
-
-
--------------------WIP--------------------
---STILL TO DO
--- insert data to currencys_updated keys     
-
-
---FOREIGN KEYS
--- Next create a function to prepare Currency 
-prepareInsertFKStmt :: Connection -> IO Statement
-prepareInsertFKStmt conn = prepare conn "INSERT INTO currencys_last_updated ( updated ) VALUES (?) SELECT updated FROM time"
-
--- Saves currency records to db 
-saveFKRecords :: Time -> Connection -> IO ()
-saveFKRecords time conn = do
-     stmt <- prepareInsertFKStmt conn 
-     execute stmt (timeToSqlValues time) 
-     commit conn

@@ -9,7 +9,6 @@ import Database
 import Data.Aeson ( encodeFile, encode )
 import qualified Data.ByteString.Lazy.Char8 as L8
 
-
 -- || MAIN FUNCTION : Access points for parsing live data, saving data to the db, creating a json file and asking questions
 main :: IO ()
 main = do
@@ -23,32 +22,40 @@ main = do
             let usdCurrency = usd bpiData
             let gbpCurrency = gbp bpiData
             let eurCurrency = eur bpiData
-            --let writeDB = encode $ bpiData 
-            --L8.writeFile "DB.json" writeDB
+
             conn <- initialiseDB
             print"***  Database Initialized  ***"
+
             saveTimeRecords (time bits) conn
             print "LIVE TIME bitcoin data has been saved ..."
+
             saveUsdRecords (usdCurrency) conn
             print "LIVE USD bitcoin data has been saved ..."
+
             saveGbpRecords (gbpCurrency) conn
             print "LIVE GBP bitcoin data has been saved ..."
+
             saveEurRecords (eurCurrency) conn
             print "LIVE EUR bitcoin data has been saved ..."
+
             linkTables conn
             createJsonFiles
             askQuestions
             askTime
+
     putStrLn "All done. Disconnecting"        
 
 
 -- || SAVE FOREIGN KEY DATA: This creates a linking table in the database that introduces relationships between tables
 linkTables conn = do
+
    usdId <- getCurrencyId "usd" conn
    gbpId <- getCurrencyId "gbp" conn
    eurId <- getCurrencyId "eur" conn
    time_updated <- queryTime conn
+
    insertIntoLinkingTable usdId gbpId eurId time_updated conn
+
    putStrLn $ "All LIVE data now successfully saved, data last updated at: " ++ show(time_updated)
 
 -- || JSON FILE: This generates JSON representation from our parsed haskell data and dumps it to a file
@@ -80,22 +87,26 @@ createJsonFiles = do
 askQuestions = do
    putStrLn $ "Now for queries. Which Bitcoin currency rate you would like to query? Enter USD, GBP or EUR"
    putStrLn $ "(type anything else to quit)"
+
    currencyAnswer <- getLine
    if elem currencyAnswer ["EUR", "eur"] then
       do
          conn <- initialiseDB
          resultEUR <- queryItemByCode "EUR" conn
-         putStrLn $ "Here's the latest EURO rate data: " ++ show(resultEUR)
+         putStrLn $ "Here's the latest EURO rate: " ++ show(resultEUR)
+
    else if elem currencyAnswer ["GBP", "gbp"] then
       do
          conn <- initialiseDB
          resultGBP <- queryItemByCode "GBP" conn
-         putStrLn $ "Here's the latest GBP rate data: " ++ show(resultGBP) 
+         putStrLn $ "Here's the latest GBP rate: " ++ show(resultGBP) 
+
    else if elem currencyAnswer ["USD", "usd"] then
       do
          conn <- initialiseDB
          resultUSD <- queryItemByCode "USD" conn
-         putStrLn $ "Here's the latest USD rate data: " ++ show(resultUSD)
+         putStrLn $ "Here's the latest USD rate: " ++ show(resultUSD)
+
    else
       putStrLn $ "Thank you for using the Bitcoin app"
 
@@ -104,6 +115,7 @@ askQuestions = do
 askTime = do 
    putStrLn $ "Would you like to know when the bitcoin rate was last updated? Type 'yes' to proceed"
    putStrLn $ "(type anything else to quit)"
+
    timeAnswer <- getLine
    if elem timeAnswer ["yes", "YES", "y", "Y"] then
       do
