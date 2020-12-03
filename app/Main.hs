@@ -107,7 +107,7 @@ askTime = do
    timeAnswer <- getLine
    if timeAnswer == "yes" then
       do
-         print "Retrieving latest TIME Bitcoin data ....."
+         print "Retrieving latest time Bitcoin data ....."
          let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
          json <- download url
          case (parse json) of
@@ -115,6 +115,6 @@ askTime = do
             Right bits -> do
                case getTime json of 
                     Nothing -> putStrLn $ "Could not find the Bitcoin time :("
-                    Just time -> putStrLn $ "The Time the bitcoin currencies were last updated was: " ++ show(getTime json)
+                    Just time -> putStrLn $ "The Time the bitcoin currencies were last updated was: " ++ show(time)
    else
       putStrLn $ "Thank you for using the Bitcoin app"              
