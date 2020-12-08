@@ -17,7 +17,8 @@ module Database
     queryItemByCode,
     getCurrencyId,
     insertIntoLinkingTable,
-    queryTime
+    queryTime,
+    queryAll
     ) where
 
 import Database.HDBC
@@ -178,6 +179,17 @@ queryTime conn = do
   return $ head $ map fromSql $ last rows -- Makes sure you return only last (most recent) row - this is to provide LIVE data
   where
     query = unlines $ ["SELECT updated FROM time"]
+
+-- queryAll returns results from join query of all currency tables
+queryAll ::  IConnection conn => conn -> IO [String]
+queryAll conn = do
+  stmt <- prepare conn query
+  execute stmt []
+  rows <- fetchAllRows stmt 
+  return $ map fromSql $ last rows -- fetch most recent currency rates
+  where
+    query = unlines $ ["SELECT usd.code, usd.rate, gbp.code, gbp.rate, eur.code, eur.rate FROM usd INNER JOIN linkingTable ON usd.usd_id = linkingTable.usd_id INNER JOIN eur ON eur.eur_id = linkingTable.eur_id INNER JOIN gbp ON gbp.gbp_id = linkingTable.gbp_id;"]
+
 
 -- || SAVE RETRIEVED VALUES TO THE linkingTable TABLE
 insertIntoLinkingTable :: IConnection conn => String -> String -> String -> String -> conn -> IO ()
