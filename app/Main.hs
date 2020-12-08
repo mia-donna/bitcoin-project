@@ -3,7 +3,6 @@
 
 module Main where
 
-
 import HTTP
 import Parse
 import Database
@@ -41,16 +40,18 @@ main = do
             print "LIVE EUR bitcoin data has been saved ..."
             -- create a linkingTable which fill store key to key relations
             linkTables conn
-            
-            printAllCurrencies conn
+            -- create JSON files
             createJsonFiles
-            askQuestions
+            -- get input from the user and return data from queries
+            askQuestions conn
+            -- ask user if they want to print time
             askTime
 
     putStrLn "All done. Disconnecting"        
 
 
--- || SAVE FOREIGN KEY DATA: This creates a linking table in the database that introduces relationships between tables
+-- || SAVE FOREIGN KEY DATA: This function queries primary keys from tables already created and 
+-- uses them to form a linking table with foreign keys creating relationships between tables
 linkTables conn = do
 
    usdId <- getCurrencyId "usd" conn
@@ -58,8 +59,10 @@ linkTables conn = do
    eurId <- getCurrencyId "eur" conn
    time_updated <- queryTime conn
 
+   -- pass the key data retrieved into function that will insert them into foreign key table
    insertIntoLinkingTable usdId gbpId eurId time_updated conn
 
+   -- inform the user on successful saving of the data
    putStrLn $ "All LIVE data now successfully saved, data last updated at: " ++ show(time_updated)
 
 -- || Styles the output of the output of queryAll function, which returns data for all currencies
@@ -73,7 +76,7 @@ printAllCurrencies conn = do
                                  print("Latest GBP rate: "++ head xs)
                                  styleCurrencies xs
                               else if x == "EUR" then do -- find the first instance of USD and return following value then continue with the rest of the list
-                                 print("Latest EUR rate: "++ head xs) print(xs)
+                                 print("Latest EUR rate: "++ head xs)
                                  styleCurrencies xs
                               else do -- if the list doest't have at lest 2 values then finish reading the list
                                  if length xs < 2 then
@@ -109,34 +112,35 @@ createJsonFiles = do
                 putStrLn "Alright, no file output created this time." 
 
 -- || ASK QUERIES 1: We ask our user questions and pull data from our db to answer them
-askQuestions = do
-   putStrLn $ "Now for queries. Which Bitcoin currency rate you would like to query? Enter USD, GBP or EUR"
-   putStrLn $ "(type anything else to quit)"
+askQuestions conn = do
+   putStrLn $ "Now for queries. Which Bitcoin currency rate you would like to query? Enter USD, GBP, EUR or ALL"
+   putStrLn $ "(type anything else to continue)"
 
    currencyAnswer <- getLine
    if elem currencyAnswer ["EUR", "eur"] then
       do
-         conn <- initialiseDB
          resultEUR <- queryItemByCode "EUR" conn
          putStrLn $ "Here's the latest EURO rate: " ++ show(resultEUR)
 
    else if elem currencyAnswer ["GBP", "gbp"] then
       do
-         conn <- initialiseDB
          resultGBP <- queryItemByCode "GBP" conn
          putStrLn $ "Here's the latest GBP rate: " ++ show(resultGBP) 
 
    else if elem currencyAnswer ["USD", "usd"] then
       do
-         conn <- initialiseDB
          resultUSD <- queryItemByCode "USD" conn
          putStrLn $ "Here's the latest USD rate: " ++ show(resultUSD)
 
+   else if elem currencyAnswer ["ALL", "all"] then
+      do
+         printAllCurrencies conn
    else
-      putStrLn $ "Thank you for using the Bitcoin app"
+      putStrLn $ "\n"
 
 
 -- || ASK QUERIES 2: We ask our user if they want time data and we use previews and keys to parse and grab from url 
+   -- disclaimer: there are two ways we use to get time: one is to query the database or to get it directly from json file
 askTime = do 
    putStrLn $ "Would you like to know when the bitcoin rate was last updated? Type 'yes' to proceed"
    putStrLn $ "(type anything else to quit)"
