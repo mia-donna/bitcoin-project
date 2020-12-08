@@ -149,11 +149,11 @@ askTime conn = do
    
    if elem timeAnswer ["yes", "YES", "y", "Y"] then do
       putStrLn $ "\n\nYou can either query the database or return JSON data? Type 'DB' or 'JSON' to choose"
-      putStrLn $ "\n\n(type anything else to quit)"
+      putStrLn $ "(type anything else to quit)"
       dbJsonAnswer <- getLine
 
       if elem dbJsonAnswer ["json", "JSON"] then do
-         putStrLn $ "\n\nRetrieving latest time Bitcoin data ....."
+         putStrLn $ "Retrieving latest time Bitcoin data ....."
          let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
          json <- download url
          case (parse json) of
@@ -161,10 +161,10 @@ askTime conn = do
             Right bits -> do
                case getTime json of 
                   Nothing -> putStrLn $ "Could not find the Bitcoin time :("
-                  Just time -> putStrLn $ "The bitcoin currencies were last updated was at: " ++ show(time)
+                  Just time -> putStrLn $ "\n\nThe bitcoin currencies were last updated was at: " ++ show(time)
       else if elem dbJsonAnswer ["db", "DB", "database", "DATABASE"] then do
-         putStrLn $ "\n\nRetrieving latest time Bitcoin data ....."
+         putStrLn $ "Retrieving latest time Bitcoin data ....."
          time <- queryTime conn
-         putStrLn $ "The bitcoin currencies were last updated was at: " ++ show(time)
+         putStrLn $ "\n\nThe bitcoin currencies were last updated was at: " ++ show(time)
       else putStrLn $ "\n\nThank you for using the Bitcoin app"
    else putStrLn $ "\n\nThank you for using the Bitcoin app"          
