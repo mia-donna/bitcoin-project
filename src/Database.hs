@@ -33,7 +33,7 @@ import Data.Char
 initialiseDB :: IO Connection
 initialiseDB =
  do
-    conn <- connectSqlite3 "bitcoin-test2.sqlite"
+    conn <- connectSqlite3 "bitcoin.sqlite"
     run conn "CREATE TABLE IF NOT EXISTS linkingTable (\
           \usd_id INTEGER NOT NULL, \
           \gbp_id INTEGER NOT NULL, \
@@ -115,7 +115,7 @@ saveTimeRecords time conn = do
      execute stmt (timeToSqlValues time) 
      commit conn    
 
--- || CURRENCYS
+-- || CURRENCIES
 -- |PREPARE GBP : This prepares our db connection and takes our SQL statement
 prepareInsertGbpStmt :: Connection -> IO Statement
 prepareInsertGbpStmt conn = prepare conn "INSERT INTO gbp (code, symbol, rate, description, rate_float) VALUES (?,?,?,?,?)"
