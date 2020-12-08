@@ -3,6 +3,7 @@
 
 module Main where
 
+
 import HTTP
 import Parse
 import Database
@@ -18,27 +19,30 @@ main = do
     case (parse json) of
         Left err -> print err
         Right bits -> do
+           -- give names to values extracted from the parsed json
             let bpiData = bpi bits
             let usdCurrency = usd bpiData
             let gbpCurrency = gbp bpiData
             let eurCurrency = eur bpiData
-
+            -- initialize the database connection
             conn <- initialiseDB
             print"***  Database Initialized  ***"
-
+            -- save data into time table
             saveTimeRecords (time bits) conn
             print "LIVE TIME bitcoin data has been saved ..."
-
+            -- save data into and USD currency table
             saveUsdRecords (usdCurrency) conn
             print "LIVE USD bitcoin data has been saved ..."
-
+            -- save data into and GBP currency table
             saveGbpRecords (gbpCurrency) conn
             print "LIVE GBP bitcoin data has been saved ..."
-
+            -- save data into and EUR currency table
             saveEurRecords (eurCurrency) conn
             print "LIVE EUR bitcoin data has been saved ..."
-
+            -- create a linkingTable which fill store key to key relations
             linkTables conn
+            
+            printAllCurrencies conn
             createJsonFiles
             askQuestions
             askTime
@@ -57,6 +61,27 @@ linkTables conn = do
    insertIntoLinkingTable usdId gbpId eurId time_updated conn
 
    putStrLn $ "All LIVE data now successfully saved, data last updated at: " ++ show(time_updated)
+
+-- || Styles the output of the output of queryAll function, which returns data for all currencies
+-- IMPORTANT ! We assume that this function always takes an argument of the same structure ["currency code", "rate", "currency code", "rate"...] in following order: USD, GBP, EUR
+printAllCurrencies conn = do
+   allCurrencies <- queryAll conn -- queryAll returns results from join query of all currency tables
+   let styleCurrencies (x:xs) = if x == "USD" then do -- find the first instance of USD and return following value then continue with the rest of the list
+                                 print("Latest USD rate: "++ head xs)
+                                 styleCurrencies xs
+                              else if x == "GBP" then do -- find the first instance of USD and return following value then continue with the rest of the list
+                                 print("Latest GBP rate: "++ head xs)
+                                 styleCurrencies xs
+                              else if x == "EUR" then do -- find the first instance of USD and return following value then continue with the rest of the list
+                                 print("Latest EUR rate: "++ head xs) print(xs)
+                                 styleCurrencies xs
+                              else do -- if the list doest't have at lest 2 values then finish reading the list
+                                 if length xs < 2 then
+                                    print("That's all data for today")
+                                 else
+                                    styleCurrencies xs
+   styleCurrencies allCurrencies
+
 
 -- || JSON FILE: This generates JSON representation from our parsed haskell data and dumps it to a file
 createJsonFiles = do
