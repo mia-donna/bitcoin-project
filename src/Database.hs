@@ -149,6 +149,18 @@ saveEurRecords currency conn = do
      execute stmt (currencyToSqlValues currency) 
      commit conn
 
+-- || SAVE RETRIEVED primary key values to the linkingTable TABLE to create relations
+insertIntoLinkingTable :: IConnection conn => String -> String -> String -> String -> conn -> IO ()
+insertIntoLinkingTable usd_id gbp_id eur_id time conn = do
+  stmt <- prepare conn query
+  execute stmt []
+  commit conn
+  where 
+    query = unlines $ ["INSERT INTO linkingTable (usd_id, gbp_id, eur_id, updated) VALUES ("++ usd_id ++","++ gbp_id ++","++ eur_id ++ ",'"++ time ++ "')"]
+
+
+
+-- Now that the data is inserted here are functions to query tables
 -- || QUERIES
 -- | BY CODE: This queries items by currency code
 queryItemByCode ::  IConnection conn => String -> conn -> IO [String]
@@ -189,13 +201,3 @@ queryAll conn = do
   return $ map fromSql $ last rows -- fetch most recent currency rates
   where
     query = unlines $ ["SELECT usd.code, usd.rate, gbp.code, gbp.rate, eur.code, eur.rate FROM usd INNER JOIN linkingTable ON usd.usd_id = linkingTable.usd_id INNER JOIN eur ON eur.eur_id = linkingTable.eur_id INNER JOIN gbp ON gbp.gbp_id = linkingTable.gbp_id;"]
-
-
--- || SAVE RETRIEVED VALUES TO THE linkingTable TABLE
-insertIntoLinkingTable :: IConnection conn => String -> String -> String -> String -> conn -> IO ()
-insertIntoLinkingTable usd_id gbp_id eur_id time conn = do
-  stmt <- prepare conn query
-  execute stmt []
-  commit conn
-  where 
-    query = unlines $ ["INSERT INTO linkingTable (usd_id, gbp_id, eur_id, updated) VALUES ("++ usd_id ++","++ gbp_id ++","++ eur_id ++ ",'"++ time ++ "')"]
