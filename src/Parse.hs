@@ -72,15 +72,15 @@ instance ToJSON Time
 instance FromJSON Currency
 instance ToJSON Currency
 
--- |PERFORMS PARSING of all our BITCOIN DATA 
+-- |"parse" function PERFORMS PARSING of all our BITCOIN DATA for our main function
 parse :: L8.ByteString -> Either String Bitcoin
 parse json = eitherDecode json :: Either String Bitcoin
 
--- |PERFORMS PARSING of our TIME data using LENS
+-- |"getTime" function PERFORMS PARSING of our TIME data using LENS module for our queries
 
 getTime :: L8.ByteString -> Maybe Text
 getTime = preview (key "time" . key "updated" . _String)
 
--- |PERFORMS DB DUMP conversion of Haskell -> JSON for json file
+-- |PERFORMS conversion of Haskell -> JSON for json file
 bpiEncode :: [Bpi] -> Object
 bpiEncode = HM.unions . map (\(Object bpi) -> bpi) . map toJSON

@@ -9,7 +9,7 @@ import Database
 import Data.Aeson ( encodeFile, encode )
 import qualified Data.ByteString.Lazy.Char8 as L8
 
--- || MAIN FUNCTION : Access points for parsing live data, saving data to the db, creating a json file and asking questions
+-- |MAIN FUNCTION : Access points for parsing live data, saving data to the db, creating json files and asking questions
 main :: IO ()
 main = do
     let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
@@ -50,7 +50,7 @@ main = do
     putStrLn "\n\nAll done. Thank you for using the Bitcoin app. Disconnecting"        
 
 
--- || SAVE FOREIGN KEY DATA: This function queries primary keys from tables already created and 
+-- |SAVE FOREIGN KEY DATA: This function queries primary keys from tables already created and 
 -- uses them to form a linking table with foreign keys creating relationships between tables
 linkTables conn = do
 
@@ -65,7 +65,7 @@ linkTables conn = do
    -- inform the user on successful saving of the data
    putStrLn $ "All LIVE data now successfully saved"
 
--- || Styles the output of the output of queryAll function, which returns data for all currencies
+-- |Styles the output of the output of queryAll function, which returns data for all currencies
 -- IMPORTANT ! We assume that this function always takes an argument of the same structure ["currency code", "rate", "currency code", "rate"...] in following order: USD, GBP, EUR
 printAllCurrencies conn = do
    allCurrencies <- queryAll conn -- queryAll returns results from join query of all currency tables
@@ -86,7 +86,7 @@ printAllCurrencies conn = do
    styleCurrencies allCurrencies
 
 
--- || JSON FILE: This generates JSON representation from our parsed haskell data and dumps it to a file
+-- |JSON FILE: This generates JSON representations from our parsed haskell data and dumps it to files
 createJsonFiles = do
     putStrLn $ "\n\nFirst it's time to create two json files from our parsed data and database."
     let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
@@ -112,7 +112,7 @@ createJsonFiles = do
             else 
                 putStrLn "Alright, no file output created this time." 
 
--- || ASK QUERIES 1: We ask our user questions and pull data from our db to answer them
+-- |ASK QUERIES 1: We ask our user questions and pull data from our db to answer them
 askQuestions conn = do
    putStrLn $ "\n\nNow for queries. Which Bitcoin currency rate you would like to query? Enter USD, GBP, EUR or ALL"
    putStrLn $ "(type anything else to continue)"
@@ -140,7 +140,7 @@ askQuestions conn = do
       putStrLn $ "\n\n"
 
 
--- || ASK QUERIES 2: We ask our user if they want time data and we use previews and keys to parse and grab from url 
+-- |ASK QUERIES 2: We ask our user if they want to get time data 
    -- disclaimer: there are two ways we use to get time: one is to query the database or to get it directly from json file
 askTime conn = do 
    putStrLn $ "\n\nWould you like to know when the bitcoin rate was last updated? Type 'yes' to proceed"

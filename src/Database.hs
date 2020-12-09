@@ -81,7 +81,7 @@ initialiseDB =
     commit conn
     return conn   
 
--- |TIME TO SQL: "timeToSqlValues" converts all our time values toSql
+-- |TIME TO SQL: "timeToSqlValues" function converts all our time values toSql
 timeToSqlValues :: Time -> [SqlValue] 
 timeToSqlValues time = [
        toSql $ updated time,
@@ -89,7 +89,7 @@ timeToSqlValues time = [
        toSql $ updateduk time
     ]
 
--- |CURRENCY TO SQL: "currencyToSqlValues" converts all our currency values toSql
+-- |CURRENCY TO SQL: "currencyToSqlValues" function converts all our currency values toSql
 currencyToSqlValues :: Currency -> [SqlValue] 
 currencyToSqlValues currency = [
        toSql $ code currency,
@@ -99,51 +99,51 @@ currencyToSqlValues currency = [
        toSql $ rate_float currency
     ]   
 
--- |PREPARE TIME: "prepareInsertTimeStmt" prepares our db connection and takes our SQL statement
+-- |PREPARE TIME: "prepareInsertTimeStmt" function prepares our db connection and takes our SQL statement
 prepareInsertTimeStmt :: Connection -> IO Statement
 prepareInsertTimeStmt conn = prepare conn "INSERT INTO time (updated, updated_ISO, updateduk) VALUES (?,?,?)"
 
--- |SAVE TIME: "saveTimeRecords" saves our time records to the db
+-- |SAVE TIME: "saveTimeRecords" function saves our time records to the db
 saveTimeRecords :: Time -> Connection -> IO ()
 saveTimeRecords time conn = do
      stmt <- prepareInsertTimeStmt conn 
      execute stmt (timeToSqlValues time) 
      commit conn    
 
--- |PREPARE GBP : "prepareInsertGbpStmt" prepares our db connection and takes our SQL statement
+-- |PREPARE GBP : "prepareInsertGbpStmt" function prepares our db connection and takes our SQL statement
 prepareInsertGbpStmt :: Connection -> IO Statement
 prepareInsertGbpStmt conn = prepare conn "INSERT INTO gbp (code, symbol, rate, description, rate_float) VALUES (?,?,?,?,?)"
 
--- |SAVE GBP: "saveGbpRecords" saves our gbp records to the db
+-- |SAVE GBP: "saveGbpRecords" function saves our gbp records to the db
 saveGbpRecords :: Currency -> Connection -> IO ()
 saveGbpRecords currency conn = do
      stmt <- prepareInsertGbpStmt conn 
      execute stmt (currencyToSqlValues currency) 
      commit conn
 
--- |PREPARE USD : "prepareInsertUsdStmt" prepares our db connection and takes our SQL statement
+-- |PREPARE USD : "prepareInsertUsdStmt" function prepares our db connection and takes our SQL statement
 prepareInsertUsdStmt :: Connection -> IO Statement
 prepareInsertUsdStmt conn = prepare conn "INSERT INTO usd (code, symbol, rate, description, rate_float) VALUES (?,?,?,?,?)"
 
--- |SAVE USD: "saveUsdRecords" saves our gbp records to the db
+-- |SAVE USD: "saveUsdRecords" function saves our gbp records to the db
 saveUsdRecords :: Currency -> Connection -> IO ()
 saveUsdRecords currency conn = do
      stmt <- prepareInsertUsdStmt conn 
      execute stmt (currencyToSqlValues currency) 
      commit conn
 
--- |PREPARE EUR : "prepareInsertEurStmt" prepares our db connection and takes our SQL statement
+-- |PREPARE EUR : "prepareInsertEurStmt" function prepares our db connection and takes our SQL statement
 prepareInsertEurStmt :: Connection -> IO Statement
 prepareInsertEurStmt conn = prepare conn "INSERT INTO eur (code, symbol, rate, description, rate_float) VALUES (?,?,?,?,?)"
 
--- |SAVE EUR: "saveEurRecords" saves our gbp records to the db
+-- |SAVE EUR: "saveEurRecords" function saves our gbp records to the db
 saveEurRecords :: Currency -> Connection -> IO ()
 saveEurRecords currency conn = do
      stmt <- prepareInsertEurStmt conn 
      execute stmt (currencyToSqlValues currency) 
      commit conn
 
--- |SAVE RETRIEVED: "insertIntoLinkingTable" inserts primary key values to the linkingTable TABLE to create relations
+-- |SAVE RETRIEVED: "insertIntoLinkingTable" function inserts primary key values to the linkingTable TABLE to create relations
 insertIntoLinkingTable :: IConnection conn => String -> String -> String -> String -> conn -> IO ()
 insertIntoLinkingTable usd_id gbp_id eur_id time conn = do
   stmt <- prepare conn query
@@ -155,7 +155,7 @@ insertIntoLinkingTable usd_id gbp_id eur_id time conn = do
 
 
 -- |Now that the data is inserted here are functions to query tables
--- |BY CODE: "queryItemByCode" queries items by currency code
+-- |BY CODE: "queryItemByCode" function queries items by currency code
 queryItemByCode ::  IConnection conn => String -> conn -> IO [String]
 queryItemByCode itemCode conn = do
   stmt <- prepare conn query
@@ -165,7 +165,7 @@ queryItemByCode itemCode conn = do
   where
     query = unlines $ ["SELECT rate FROM "++ map toLower itemCode ++" WHERE code = ?"]
 
--- |BY ID: "getCurrencyId" selects currency id
+-- |BY ID: "getCurrencyId" function selects currency id
 getCurrencyId ::  IConnection conn => String -> conn -> IO String
 getCurrencyId currency conn = do
   stmt <- prepare conn query
@@ -175,7 +175,7 @@ getCurrencyId currency conn = do
   where
     query = unlines $ ["SELECT " ++ currency ++ "_id FROM "++ currency]
 
--- |TIME : "queryTime" gets value updated from time table 
+-- |TIME : "queryTime" function gets value updated from time table 
 queryTime ::  IConnection conn => conn -> IO String
 queryTime conn = do
   stmt <- prepare conn query
@@ -185,7 +185,7 @@ queryTime conn = do
   where
     query = unlines $ ["SELECT updated FROM time"]
 
--- |ALL CURRENCY: "queryAll" returns results from join query of all currency tables
+-- |ALL CURRENCY: "queryAll" function returns results from join query of all currency tables
 queryAll ::  IConnection conn => conn -> IO [String]
 queryAll conn = do
   stmt <- prepare conn query

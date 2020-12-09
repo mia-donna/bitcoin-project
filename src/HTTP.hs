@@ -8,6 +8,7 @@ import Network.HTTP.Simple
 
 type URL = String 
 
+-- |"download" function PERFORMS DOWNLOAD of our bitcoin url
 download :: String -> IO L8.ByteString
 download url = do
     request <- parseRequest url 
