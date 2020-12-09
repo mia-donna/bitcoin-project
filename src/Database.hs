@@ -17,7 +17,8 @@ module Database
     queryItemByCode,
     getCurrencyId,
     insertIntoLinkingTable,
-    queryTime
+    queryTime,
+    queryAll
     ) where
 
 import Database.HDBC
@@ -32,7 +33,7 @@ import Data.Char
 initialiseDB :: IO Connection
 initialiseDB =
  do
-    conn <- connectSqlite3 "bitcoin-test2.sqlite"
+    conn <- connectSqlite3 "bitcoin.sqlite"
     run conn "CREATE TABLE IF NOT EXISTS linkingTable (\
           \usd_id INTEGER NOT NULL, \
           \gbp_id INTEGER NOT NULL, \
@@ -114,7 +115,7 @@ saveTimeRecords time conn = do
      execute stmt (timeToSqlValues time) 
      commit conn    
 
--- || CURRENCYS
+-- || CURRENCIES
 -- |PREPARE GBP : This prepares our db connection and takes our SQL statement
 prepareInsertGbpStmt :: Connection -> IO Statement
 prepareInsertGbpStmt conn = prepare conn "INSERT INTO gbp (code, symbol, rate, description, rate_float) VALUES (?,?,?,?,?)"
@@ -148,6 +149,18 @@ saveEurRecords currency conn = do
      execute stmt (currencyToSqlValues currency) 
      commit conn
 
+-- || SAVE RETRIEVED primary key values to the linkingTable TABLE to create relations
+insertIntoLinkingTable :: IConnection conn => String -> String -> String -> String -> conn -> IO ()
+insertIntoLinkingTable usd_id gbp_id eur_id time conn = do
+  stmt <- prepare conn query
+  execute stmt []
+  commit conn
+  where 
+    query = unlines $ ["INSERT INTO linkingTable (usd_id, gbp_id, eur_id, updated) VALUES ("++ usd_id ++","++ gbp_id ++","++ eur_id ++ ",'"++ time ++ "')"]
+
+
+
+-- Now that the data is inserted here are functions to query tables
 -- || QUERIES
 -- | BY CODE: This queries items by currency code
 queryItemByCode ::  IConnection conn => String -> conn -> IO [String]
@@ -179,11 +192,12 @@ queryTime conn = do
   where
     query = unlines $ ["SELECT updated FROM time"]
 
--- || SAVE RETRIEVED VALUES TO THE linkingTable TABLE
-insertIntoLinkingTable :: IConnection conn => String -> String -> String -> String -> conn -> IO ()
-insertIntoLinkingTable usd_id gbp_id eur_id time conn = do
+-- queryAll returns results from join query of all currency tables
+queryAll ::  IConnection conn => conn -> IO [String]
+queryAll conn = do
   stmt <- prepare conn query
   execute stmt []
-  commit conn
-  where 
-    query = unlines $ ["INSERT INTO linkingTable (usd_id, gbp_id, eur_id, updated) VALUES ("++ usd_id ++","++ gbp_id ++","++ eur_id ++ ",'"++ time ++ "')"]
+  rows <- fetchAllRows stmt 
+  return $ map fromSql $ last rows -- fetch most recent currency rates
+  where
+    query = unlines $ ["SELECT usd.code, usd.rate, gbp.code, gbp.rate, eur.code, eur.rate FROM usd INNER JOIN linkingTable ON usd.usd_id = linkingTable.usd_id INNER JOIN eur ON eur.eur_id = linkingTable.eur_id INNER JOIN gbp ON gbp.gbp_id = linkingTable.gbp_id;"]
