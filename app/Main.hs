@@ -65,7 +65,7 @@ linkTables conn = do
    -- inform the user on successful saving of the data
    putStrLn $ "All LIVE data now successfully saved"
 
--- |Styles the output of the output of queryAll function, which returns data for all currencies
+-- |Styles the output of the output of "queryAll" function, which returns data for all currencies
 -- IMPORTANT ! We assume that this function always takes an argument of the same structure ["currency code", "rate", "currency code", "rate"...] in following order: USD, GBP, EUR
 printAllCurrencies conn = do
    allCurrencies <- queryAll conn -- queryAll returns results from join query of all currency tables
@@ -86,9 +86,10 @@ printAllCurrencies conn = do
    styleCurrencies allCurrencies
 
 
--- |JSON FILE: This generates JSON representations from our parsed haskell data and dumps it to files
+-- |ASK QUERIES 1: JSON FILE: This generates JSON representations from our parsed haskell data and dumps it to files
+   -- disclaimer: there are two ways we use to get write files: one uses "writeFile" and one uses "encodeFile"
 createJsonFiles = do
-    putStrLn $ "\n\nFirst it's time to create two json files from our parsed data and database."
+    putStrLn $ "\n\nFirst it's time to create two json files from our parsed data."
     let url = "https://api.coindesk.com/v1/bpi/currentprice.json"
     json <- download url
     case (parse json) of
@@ -106,13 +107,13 @@ createJsonFiles = do
                     json <- download url
                     let jsonString = (parse json) 
                     encodeFile "bitcoin.json" jsonString
-                    putStrLn $ "Done! Now we're generating another file directly from the database on bpi data..."
-                    L8.writeFile "DB-BPI.json" writeDB
-                    putStrLn $ "Great! Now you've got a second file DB-BPI.json from our database with just the latest BPI data."
+                    putStrLn $ "Done! Now we're generating another file just on bpi data..."
+                    L8.writeFile "bpi.json" writeDB
+                    putStrLn $ "Great! Now you've got a second file 'bpi.json' with just the latest BPI data."
             else 
                 putStrLn "Alright, no file output created this time." 
 
--- |ASK QUERIES 1: We ask our user questions and pull data from our db to answer them
+-- |ASK QUERIES 2: We ask our user a variet of questions and pull data from our db to answer them
 askQuestions conn = do
    putStrLn $ "\n\nNow for queries. Which Bitcoin currency rate you would like to query? Enter USD, GBP, EUR or ALL"
    putStrLn $ "(type anything else to continue)"
@@ -140,7 +141,7 @@ askQuestions conn = do
       putStrLn $ "\n\n"
 
 
--- |ASK QUERIES 2: We ask our user if they want to get time data 
+-- |ASK QUERIES 3: We ask our user if they want to get time data 
    -- disclaimer: there are two ways we use to get time: one is to query the database or to get it directly from json file
 askTime conn = do 
    putStrLn $ "\n\nWould you like to know when the bitcoin rate was last updated? Type 'yes' to proceed"
@@ -161,10 +162,10 @@ askTime conn = do
             Right bits -> do
                case getTime json of 
                   Nothing -> putStrLn $ "Could not find the Bitcoin time :("
-                  Just time -> putStrLn $ "\n\nThe bitcoin currencies were last updated was at: " ++ show(time)
+                  Just time -> putStrLn $ "\n\nThe bitcoin currencies were last updated at: " ++ show(time)
       else if elem dbJsonAnswer ["db", "DB", "database", "DATABASE"] then do
          putStrLn $ "Retrieving latest time Bitcoin data ....."
          time <- queryTime conn
-         putStrLn $ "\n\nThe bitcoin currencies were last updated was at: " ++ show(time)
+         putStrLn $ "\n\nThe bitcoin currencies were last updated at: " ++ show(time)
       else putStrLn $ "\n\nThank you for using the Bitcoin app"
    else putStrLn $ "\n\nThank you for using the Bitcoin app"          
